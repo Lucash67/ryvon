@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f9fc;
+  --card: #ffffff;
+  --foreground: #0a1838;
+  --primary: #2378f3;
+  --primary-soft: #5a9bf7;
+  --muted: #667085;
+  --border: #e6eaf0;
+  --success: #17a673;
+  --warning: #d99b21;
+  --danger: #dc4c4c;
+  --ring: #2378f3;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-sans);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  opacity: 1;
+}
+
+@media print {
+  nav,
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body {
+    background: white !important;
+  }
+}

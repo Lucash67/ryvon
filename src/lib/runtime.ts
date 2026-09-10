@@ -13,10 +13,11 @@ export function isAuthDisabled() {
   return process.env.NEXT_PUBLIC_AUTH_DISABLED === "true";
 }
 
-/** Explicit local demo — never active in production. */
+/** Mock/demo data path — active when auth is explicitly disabled (incl. temporary production preview). */
 export function isDemoMode() {
+  if (isAuthDisabled()) return true;
   if (isProductionRuntime()) return false;
-  return isAuthDisabled() || process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+  return process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 }
 
 export function isAuthEnabled() {
@@ -41,9 +42,6 @@ export function getSupabasePublicConfig() {
 export type ConfigIssue = "missing_supabase" | "demo_blocked_in_production";
 
 export function getConfigurationIssue(): ConfigIssue | null {
-  if (isProductionRuntime() && isAuthDisabled()) {
-    return "demo_blocked_in_production";
-  }
   if (isAuthEnabled() && !isSupabaseConfigured()) {
     return "missing_supabase";
   }

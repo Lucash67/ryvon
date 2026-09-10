@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, KpiCard } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   CaloriesChart,
@@ -22,13 +22,11 @@ import { targetsForDay } from "@/domain/adherence";
 
 function Kpi({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <Card>
-      <CardContent className="py-5">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted">{label}</p>
-        <p className="mt-2 text-2xl font-semibold">{value}</p>
-        {hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
-      </CardContent>
-    </Card>
+    <KpiCard>
+      <p className="text-[11px] font-medium tracking-[0.08em] text-muted uppercase">{label}</p>
+      <p className="mt-3 text-[26px] font-black tracking-tight">{value}</p>
+      {hint ? <p className="mt-1 text-[11px] text-muted">{hint}</p> : null}
+    </KpiCard>
   );
 }
 
@@ -128,7 +126,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-3">
             {Object.entries(data.snapshot.status).map(([key, status]) => (
-              <div key={key} className="rounded-xl bg-[#f7f9fc] p-3">
+              <div key={key} className="surface-muted rounded-xl p-3">
                 <p className="text-xs uppercase tracking-wide text-muted">{key}</p>
                 <div className="mt-2">
                   <Badge
@@ -150,7 +148,7 @@ export default async function DashboardPage() {
         <CardContent className="space-y-2">
           {insights.length ? (
             insights.map((item) => (
-              <p key={item} className="rounded-xl bg-[#f7f9fc] px-4 py-3 text-sm">
+              <p key={item} className="surface-muted rounded-xl px-4 py-3 text-sm">
                 {item}
               </p>
             ))

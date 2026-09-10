@@ -52,7 +52,7 @@ export default async function SonoPage() {
         {data.snapshot.logs.map((log) => {
           const tone = sleepTone(log.sleep_minutes);
           return (
-            <div key={log.id} className="flex items-center justify-between rounded-2xl border border-border bg-white px-4 py-3">
+            <div key={log.id} className="surface-muted flex items-center justify-between rounded-2xl border border-border px-4 py-3">
               <div>
                 <p className="font-medium">{WEEKDAY_SHORT[parseDate(log.date).getDay()]}</p>
                 <p className="text-sm text-muted">

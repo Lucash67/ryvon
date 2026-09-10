@@ -44,7 +44,7 @@ export function QuickEntry() {
           setMode("menu");
           setOpen(true);
         }}
-        className="no-print fixed bottom-20 right-4 z-40 flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-white shadow-lg lg:bottom-8"
+        className="no-print btn-primary-gradient fixed bottom-[88px] right-[14px] z-40 flex h-14 min-w-[44px] items-center gap-2 rounded-full px-5 text-sm font-bold lg:bottom-8 lg:right-6"
       >
         <Plus className="h-5 w-5" />
         Registrar
@@ -79,7 +79,7 @@ export function QuickEntry() {
                     }
                     setMode(item.id as Mode);
                   }}
-                  className="cursor-pointer rounded-xl px-3 py-3 text-sm data-[selected=true]:bg-[#eaf2fe]"
+                  className="cursor-pointer rounded-xl px-3 py-3 text-sm data-[selected=true]:bg-primary/15 data-[selected=true]:text-foreground"
                 >
                   {item.label}
                 </Command.Item>

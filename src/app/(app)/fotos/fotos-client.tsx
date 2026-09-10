@@ -67,13 +67,13 @@ export function FotosClient({ photos }: { photos: ProgressPhoto[] }) {
             <CardContent className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label>Data A</Label>
-                <select value={a} onChange={(e) => setA(e.target.value)} className="h-11 w-full rounded-xl border px-3">
+                <select value={a} onChange={(e) => setA(e.target.value)} className="h-11 w-full rounded-xl border border-border px-3">
                   {dates.map((date) => <option key={date}>{date}</option>)}
                 </select>
               </div>
               <div>
                 <Label>Data B</Label>
-                <select value={b} onChange={(e) => setB(e.target.value)} className="h-11 w-full rounded-xl border px-3">
+                <select value={b} onChange={(e) => setB(e.target.value)} className="h-11 w-full rounded-xl border border-border px-3">
                   {dates.map((date) => <option key={date}>{date}</option>)}
                 </select>
               </div>

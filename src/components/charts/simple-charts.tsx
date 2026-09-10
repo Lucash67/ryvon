@@ -18,6 +18,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Point = Record<string, string | number>;
 
+const GRID = "#1D2E48";
+const TICK = "#8EA2BE";
+const BLUE = "#0C6CFF";
+const CYAN = "#00E2FF";
+const GREEN = "#22C995";
+const AMBER = "#F4B84C";
+
+const tooltipStyle = {
+  background: "#111D31",
+  border: "1px solid #1D2E48",
+  borderRadius: 12,
+  color: "#F8FBFF",
+};
+
 export function ChartCard({
   title,
   children,
@@ -42,11 +56,11 @@ export function WeightChart({ data }: { data: Point[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data}>
-        <CartesianGrid stroke="#E6EAF0" vertical={false} />
-        <XAxis dataKey="label" tick={{ fill: "#667085", fontSize: 12 }} />
-        <YAxis tick={{ fill: "#667085", fontSize: 12 }} domain={["dataMin - 1", "dataMax + 1"]} />
-        <Tooltip />
-        <Line type="monotone" dataKey="peso" stroke="#2378F3" strokeWidth={2} dot={false} />
+        <CartesianGrid stroke={GRID} vertical={false} />
+        <XAxis dataKey="label" tick={{ fill: TICK, fontSize: 12 }} />
+        <YAxis tick={{ fill: TICK, fontSize: 12 }} domain={["dataMin - 1", "dataMax + 1"]} />
+        <Tooltip contentStyle={tooltipStyle} />
+        <Line type="monotone" dataKey="peso" stroke={BLUE} strokeWidth={2} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -56,13 +70,13 @@ export function CaloriesChart({ data }: { data: Point[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data}>
-        <CartesianGrid stroke="#E6EAF0" vertical={false} />
-        <XAxis dataKey="label" tick={{ fill: "#667085", fontSize: 12 }} />
-        <YAxis tick={{ fill: "#667085", fontSize: 12 }} />
-        <Tooltip />
+        <CartesianGrid stroke={GRID} vertical={false} />
+        <XAxis dataKey="label" tick={{ fill: TICK, fontSize: 12 }} />
+        <YAxis tick={{ fill: TICK, fontSize: 12 }} />
+        <Tooltip contentStyle={tooltipStyle} />
         <Legend />
-        <Bar dataKey="consumido" fill="#2378F3" radius={[6, 6, 0, 0]} />
-        <Bar dataKey="planejado" fill="#5A9BF7" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="consumido" fill={BLUE} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="planejado" fill={CYAN} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -72,14 +86,14 @@ export function MacrosChart({ data }: { data: Point[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data}>
-        <CartesianGrid stroke="#E6EAF0" vertical={false} />
-        <XAxis dataKey="label" tick={{ fill: "#667085", fontSize: 12 }} />
-        <YAxis tick={{ fill: "#667085", fontSize: 12 }} />
-        <Tooltip />
+        <CartesianGrid stroke={GRID} vertical={false} />
+        <XAxis dataKey="label" tick={{ fill: TICK, fontSize: 12 }} />
+        <YAxis tick={{ fill: TICK, fontSize: 12 }} />
+        <Tooltip contentStyle={tooltipStyle} />
         <Legend />
-        <Bar dataKey="proteína" fill="#17A673" radius={[6, 6, 0, 0]} />
-        <Bar dataKey="carbo" fill="#2378F3" radius={[6, 6, 0, 0]} />
-        <Bar dataKey="gordura" fill="#D99B21" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="proteína" fill={GREEN} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="carbo" fill={BLUE} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="gordura" fill={AMBER} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -89,11 +103,11 @@ export function SleepChart({ data }: { data: Point[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data}>
-        <CartesianGrid stroke="#E6EAF0" vertical={false} />
-        <XAxis dataKey="label" tick={{ fill: "#667085", fontSize: 12 }} />
-        <YAxis tick={{ fill: "#667085", fontSize: 12 }} />
-        <Tooltip />
-        <Area type="monotone" dataKey="horas" stroke="#2378F3" fill="#eaf2fe" />
+        <CartesianGrid stroke={GRID} vertical={false} />
+        <XAxis dataKey="label" tick={{ fill: TICK, fontSize: 12 }} />
+        <YAxis tick={{ fill: TICK, fontSize: 12 }} />
+        <Tooltip contentStyle={tooltipStyle} />
+        <Area type="monotone" dataKey="horas" stroke={BLUE} fill="rgba(12,108,255,0.15)" />
       </AreaChart>
     </ResponsiveContainer>
   );
@@ -103,11 +117,11 @@ export function CardioChart({ data }: { data: Point[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data}>
-        <CartesianGrid stroke="#E6EAF0" vertical={false} />
-        <XAxis dataKey="label" tick={{ fill: "#667085", fontSize: 12 }} />
-        <YAxis tick={{ fill: "#667085", fontSize: 12 }} />
-        <Tooltip />
-        <Bar dataKey="minutos" fill="#5A9BF7" radius={[6, 6, 0, 0]} />
+        <CartesianGrid stroke={GRID} vertical={false} />
+        <XAxis dataKey="label" tick={{ fill: TICK, fontSize: 12 }} />
+        <YAxis tick={{ fill: TICK, fontSize: 12 }} />
+        <Tooltip contentStyle={tooltipStyle} />
+        <Bar dataKey="minutos" fill={CYAN} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

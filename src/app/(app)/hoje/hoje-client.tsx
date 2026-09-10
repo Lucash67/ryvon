@@ -131,7 +131,7 @@ export function HojeClient({ date, log, meals, cardio, session, planned, setting
                   <button
                     key={value}
                     onClick={() => setSleepQuality(String(value))}
-                    className={`h-11 flex-1 rounded-xl border ${sleepQuality === String(value) ? "border-primary bg-[#eaf2fe] text-primary" : "border-border"}`}
+                    className={`h-11 min-w-[44px] flex-1 rounded-xl border ${sleepQuality === String(value) ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-2"}`}
                   >
                     {value}
                   </button>
@@ -150,7 +150,7 @@ export function HojeClient({ date, log, meals, cardio, session, planned, setting
           </CardHeader>
           <CardContent className="space-y-3">
             {cardio.map((item) => (
-              <div key={item.id} className="flex items-center justify-between rounded-xl bg-[#f7f9fc] px-3 py-3">
+              <div key={item.id} className="surface-muted flex items-center justify-between rounded-xl px-3 py-3">
                 <p className="text-sm">
                   {CARDIO_LABELS[item.type]} · {item.minutes} min · RPE {item.rpe ?? "—"}
                 </p>

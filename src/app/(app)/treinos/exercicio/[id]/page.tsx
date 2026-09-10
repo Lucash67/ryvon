@@ -85,7 +85,7 @@ export default async function ExerciseHistoryPage({
             {chronological.map((item) => {
               const best = bestWorkSet(item.exercise_sets);
               return (
-                <div key={`${item.workout_sessions.date}-${best?.weight}`} className="flex justify-between rounded-xl bg-[#f7f9fc] px-3 py-3 text-sm">
+                <div key={`${item.workout_sessions.date}-${best?.weight}`} className="surface-muted flex justify-between rounded-xl px-3 py-3 text-sm">
                   <span>{item.workout_sessions.date}</span>
                   <span>
                     {best ? `${best.weight}kg × ${best.reps}` : "—"} · vol {formatNumber(sessionVolume(item.exercise_sets))}

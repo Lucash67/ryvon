@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { BrandMark } from "@/components/layout/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, Label, FieldError } from "@/components/ui/input";
@@ -13,14 +14,14 @@ export function LoginForm() {
   const [pending, setPending] = useState(false);
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="app-shell flex min-h-screen items-center justify-center px-4 py-10">
       <Card className="w-full max-w-md">
         <CardContent className="py-8">
-          <p className="text-xs font-semibold tracking-[0.18em] text-muted">RYVON</p>
-          <h1 className="mt-2 text-2xl font-semibold">Entrar</h1>
-          <p className="mt-1 text-sm text-muted">Painel operacional de evolução física.</p>
+          <BrandMark className="mb-6" />
+          <h1 className="text-2xl font-semibold tracking-tight">Entrar</h1>
+          <p className="mt-1 text-sm text-muted">Acesse sua rotina, treinos e evolução.</p>
           {!isSupabaseConfigured() ? (
-            <p className="mt-4 rounded-xl bg-[#fff6e5] px-3 py-2 text-sm text-warning">
+            <p className="mt-4 rounded-xl bg-warning/12 px-3 py-2 text-sm text-[#ffd37e]">
               Configure `.env.local` com as chaves do Supabase antes de entrar. Veja o README.
             </p>
           ) : null}
@@ -55,7 +56,7 @@ export function LoginForm() {
             </div>
             <FieldError message={error} />
             <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "Entrando..." : "Entrar"}
+              {pending ? "Entrando..." : "Entrar →"}
             </Button>
           </form>
         </CardContent>

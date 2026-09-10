@@ -259,7 +259,7 @@ function Compare({
 }) {
   const delta = current != null && previous != null ? current - previous : null;
   return (
-    <div className="rounded-xl bg-[#f7f9fc] p-4">
+    <div className="surface-muted rounded-xl p-4">
       <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
       <p className="mt-1 text-xl font-semibold">
         {current == null ? "—" : `${formatNumber(current, suffix.includes("kg") ? 1 : 0)}${suffix}`}

@@ -95,7 +95,7 @@ export function SessionClient({
       </div>
 
       {rest != null ? (
-        <div className="fixed inset-x-0 bottom-24 z-40 mx-auto w-[min(92%,420px)] rounded-2xl bg-[#0A1838] px-5 py-4 text-white shadow-xl lg:bottom-8">
+        <div className="fixed inset-x-0 bottom-24 z-40 mx-auto w-[min(92%,420px)] rounded-2xl border border-primary/35 bg-[color-mix(in_srgb,var(--bg-2)_93%,transparent)] px-5 py-4 text-foreground shadow-xl backdrop-blur-xl lg:bottom-8">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-wide text-white/70">Descanso</p>
@@ -108,7 +108,7 @@ export function SessionClient({
         </div>
       ) : null}
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] lg:static lg:mt-6 lg:border-0 lg:bg-transparent lg:p-0">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-[color-mix(in_srgb,var(--bg)_96%,transparent)] p-4 pb-[calc(env(safe-area-inset-bottom)+16px)] backdrop-blur-xl lg:static lg:mt-6 lg:border-0 lg:bg-transparent lg:p-0">
         <Button
           className="w-full"
           size="lg"
@@ -143,7 +143,7 @@ function SetRow({ set, previous }: { set: ExerciseSet; previous: { weight: numbe
   }, 400);
 
   return (
-    <div className="rounded-xl bg-[#f7f9fc] p-3">
+    <div className="surface-muted rounded-xl p-3">
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Work set {set.set_number}</p>
       <div className="grid grid-cols-3 gap-2">
         <div>

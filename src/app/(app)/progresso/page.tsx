@@ -72,7 +72,7 @@ export default async function ProgressoPage() {
         <CardContent className="space-y-2">
           {notes.length === 0 ? <p className="text-sm text-muted">Nenhuma ocorrência registrada.</p> : null}
           {notes.map((note) => (
-            <div key={note.id} className="rounded-xl bg-[#f7f9fc] px-4 py-3">
+            <div key={note.id} className="surface-muted rounded-xl px-4 py-3">
               <p className="text-xs text-muted">
                 {note.date} · {HEALTH_NOTE_LABELS[note.type]} · {note.status}
               </p>

@@ -96,7 +96,7 @@ export function SettingsForm({
             {exercises.map((item) => (
               <form
                 key={item.id}
-                className="grid gap-2 rounded-xl bg-[#f7f9fc] p-3 sm:grid-cols-4"
+                className="surface-muted grid gap-2 rounded-xl p-3 sm:grid-cols-4"
                 action={async (formData) => {
                   await saveTemplateExerciseAction(item.id, {
                     work_sets: Number(formData.get("work_sets")),

@@ -4,7 +4,11 @@ import type { HTMLAttributes } from "react";
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("rounded-2xl border border-border bg-card shadow-[0_1px_2px_rgba(10,24,56,0.04)]", className)}
+      className={cn(
+        "rounded-[var(--radius-xl)] border border-border transition-all duration-200 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--primary)_28%,var(--border))]",
+        className,
+      )}
+      style={{ background: "var(--card-gradient)", boxShadow: "var(--shadow)" }}
       {...props}
     />
   );
@@ -20,4 +24,13 @@ export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingEle
 
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("px-5 pb-5 pt-4", className)} {...props} />;
+}
+
+export function KpiCard({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <Card
+      className={cn("kpi-accent relative min-h-[128px] overflow-hidden p-[17px] hover:translate-y-0", className)}
+      {...props}
+    />
+  );
 }

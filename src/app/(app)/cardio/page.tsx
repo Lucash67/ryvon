@@ -56,7 +56,7 @@ export default async function CardioPage() {
           {data.snapshot.logs.map((log) => {
             const sessions = data.snapshot.cardio.filter((item) => item.daily_log_id === log.id);
             return (
-              <div key={log.id} className="flex items-center justify-between rounded-xl bg-[#f7f9fc] px-3 py-3 text-sm">
+              <div key={log.id} className="surface-muted flex items-center justify-between rounded-xl px-3 py-3 text-sm">
                 <span>{WEEKDAY_SHORT[parseDate(log.date).getDay()]}</span>
                 <span>
                   {sessions.length

@@ -44,7 +44,7 @@ export default async function TreinosPage() {
         </CardHeader>
         <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {data.templates.map((template) => (
-            <div key={template.id} className="rounded-xl bg-[#f7f9fc] px-4 py-3">
+            <div key={template.id} className="surface-muted rounded-xl px-4 py-3">
               <p className="text-sm font-semibold">{template.name}</p>
               <p className="text-xs text-muted">{template.is_rest ? "Off" : "Day On"}</p>
             </div>

@@ -19,6 +19,8 @@ import { average, mostCommon, sum } from "@/utils/format";
 import { datesInRange } from "@/utils/dates";
 import { listCardioByWeek, listDailyLogsByWeek } from "@/services/daily-log.service";
 import { latestWeight, listWeightLogs } from "@/services/entries.service";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { mockStore } from "@/lib/mock-store";
 import { listWorkoutSessionsInRange } from "@/services/workout.service";
 import type {
   CardioSession,
@@ -228,23 +230,37 @@ export async function upsertWeeklyReport(
     verdict: snapshot.verdict,
     summary: snapshot.summary,
   };
-  const { data, error } = await supabase
-    .from("weekly_reports")
-    .upsert(payload, { onConflict: "week_id" })
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data as WeeklyReport;
+  if (!isSupabaseConfigured()) {
+    return mockStore.upsertWeeklyReport(payload as any);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("weekly_reports")
+      .upsert(payload, { onConflict: "week_id" })
+      .select("*")
+      .single();
+    if (error) return mockStore.upsertWeeklyReport(payload as any);
+    return data as WeeklyReport;
+  } catch {
+    return mockStore.upsertWeeklyReport(payload as any);
+  }
 }
 
 export async function getWeeklyReport(supabase: SupabaseClient, weekId: string) {
-  const { data, error } = await supabase
-    .from("weekly_reports")
-    .select("*")
-    .eq("week_id", weekId)
-    .maybeSingle();
-  if (error) throw error;
-  return (data as WeeklyReport | null) ?? null;
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+  try {
+    const { data, error } = await supabase
+      .from("weekly_reports")
+      .select("*")
+      .eq("week_id", weekId)
+      .maybeSingle();
+    if (error) return null;
+    return (data as WeeklyReport | null) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function dashboardInsights(

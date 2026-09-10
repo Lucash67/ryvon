@@ -3,19 +3,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartCard, WeightChart } from "@/components/charts/simple-charts";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireSession } from "@/lib/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { latestWeight, listHealthNotes, listWeightLogs } from "@/services/entries.service";
 import { getProfileAndSettings } from "@/services/settings.service";
+import { demoLoadDashboard, demoLoadNotesAndPhotos } from "@/services/demo-state";
 import { formatNumber } from "@/utils/dates";
 import { HEALTH_NOTE_LABELS } from "@/domain/constants";
 
 export default async function ProgressoPage() {
   const { supabase, user } = await requireSession();
-  const [{ settings }, weights, latest, notes] = await Promise.all([
-    getProfileAndSettings(supabase, user.id),
-    listWeightLogs(supabase, user.id, { limit: 90 }),
-    latestWeight(supabase, user.id),
-    listHealthNotes(supabase, user.id),
-  ]);
+  const [{ settings }, weights, latest, notes] = isSupabaseConfigured()
+    ? await Promise.all([
+        getProfileAndSettings(supabase, user.id),
+        listWeightLogs(supabase, user.id, { limit: 90 }),
+        latestWeight(supabase, user.id),
+        listHealthNotes(supabase, user.id),
+      ])
+    : [
+        { settings: demoLoadDashboard().settings },
+        demoLoadDashboard().weights,
+        demoLoadDashboard().latestWeight,
+        demoLoadNotesAndPhotos().notes,
+      ];
   const first = weights.at(-1);
   const delta = latest && first ? latest.weight - first.weight : null;
 

@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PrintButton } from "@/components/print-button";
 import { requireSession } from "@/lib/auth";
 import { loadWeekView } from "@/services/loaders";
-import { upsertWeeklyReport } from "@/services/analytics.service";
 import { verdictLabel } from "@/domain/scores";
 import { formatNumber, minutesToHoursLabel, weekRangeLabel } from "@/utils/dates";
 import { pct } from "@/utils/format";
@@ -16,7 +15,7 @@ export default async function RelatoriosPage({
   const { supabase, user } = await requireSession();
   const params = await searchParams;
   const data = await loadWeekView(supabase, user.id, params.w ? Number(params.w) : undefined);
-  const report = await upsertWeeklyReport(supabase, data.week.id, data.snapshot);
+  const report = data.snapshot.scores;
   const summary = data.snapshot.summary;
 
   return (
@@ -30,7 +29,7 @@ export default async function RelatoriosPage({
       <section className="space-y-4">
         <Block title="Veredito geral">
           <p className="text-3xl font-semibold">{verdictLabel(data.snapshot.verdict)}</p>
-          <p className="mt-2 text-sm text-muted">Score {report.general_score} / 10</p>
+          <p className="mt-2 text-sm text-muted">Score {report.general} / 10</p>
         </Block>
         <Block title="Execução">
           <p>Aderência geral {pct(data.snapshot.adherence.general)}</p>
@@ -40,7 +39,7 @@ export default async function RelatoriosPage({
           <p>
             {summary.workouts_completed}/{summary.workouts_planned} concluídos · {summary.workouts_missed} perdidos
           </p>
-          <p>Score {report.training_score}</p>
+          <p>Score {report.training}</p>
         </Block>
         <Block title="Nutrição">
           <p>Média {formatNumber(summary.calories_avg)} kcal · proteína {formatNumber(summary.protein_avg)} g</p>

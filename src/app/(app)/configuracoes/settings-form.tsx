@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
 import { saveSettingsAction, saveTemplateExerciseAction, signOutAction } from "@/app/actions";
+import { isAuthDisabled } from "@/lib/flags";
 import type { FitnessSettings, Profile, WorkoutTemplate, WorkoutTemplateExercise } from "@/types";
 
 export function SettingsForm({
@@ -78,11 +79,13 @@ export function SettingsForm({
         <Button type="submit">Salvar configurações</Button>
         {message ? <p className="text-sm text-success">{message}</p> : null}
       </form>
-      <form action={signOutAction}>
-        <Button type="submit" variant="outline">
-          Sair
-        </Button>
-      </form>
+      {isAuthDisabled() ? null : (
+        <form action={signOutAction}>
+          <Button type="submit" variant="outline">
+            Sair
+          </Button>
+        </form>
+      )}
 
       {catalog.map(({ template, exercises }) => (
         <Card key={template.id}>

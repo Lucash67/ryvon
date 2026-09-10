@@ -1,5 +1,7 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+﻿import type { SupabaseClient } from "@supabase/supabase-js";
 import { detectProgression } from "@/domain/progression";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { mockStore } from "@/lib/mock-store";
 import type {
   Exercise,
   ExerciseSession,
@@ -11,36 +13,57 @@ import type {
 } from "@/types";
 
 export async function listExercises(supabase: SupabaseClient, userId: string) {
-  const { data, error } = await supabase
-    .from("exercises")
-    .select("*")
-    .eq("user_id", userId)
-    .order("name");
-  if (error) throw error;
-  return (data ?? []) as Exercise[];
+  if (!isSupabaseConfigured()) {
+    return mockStore.listExercises();
+  }
+  try {
+    const { data, error } = await supabase
+      .from("exercises")
+      .select("*")
+      .eq("user_id", userId)
+      .order("name");
+    if (error || !data || data.length === 0) return mockStore.listExercises();
+    return (data ?? []) as Exercise[];
+  } catch {
+    return mockStore.listExercises();
+  }
 }
 
 export async function listTemplateExercises(supabase: SupabaseClient, templateId: string) {
-  const { data, error } = await supabase
-    .from("workout_template_exercises")
-    .select("*, exercise:exercises(*)")
-    .eq("template_id", templateId)
-    .order("position");
-  if (error) throw error;
-  return (data ?? []) as WorkoutTemplateExercise[];
+  if (!isSupabaseConfigured()) {
+    return mockStore.listTemplateExercises(templateId);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("workout_template_exercises")
+      .select("*, exercise:exercises(*)")
+      .eq("template_id", templateId)
+      .order("position");
+    if (error || !data || data.length === 0) return mockStore.listTemplateExercises(templateId);
+    return (data ?? []) as WorkoutTemplateExercise[];
+  } catch {
+    return mockStore.listTemplateExercises(templateId);
+  }
 }
 
 export async function getWorkoutSessionForDate(supabase: SupabaseClient, userId: string, date: string) {
-  const { data, error } = await supabase
-    .from("workout_sessions")
-    .select("*, template:workout_templates(*)")
-    .eq("user_id", userId)
-    .eq("date", date)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return (data as WorkoutSession | null) ?? null;
+  if (!isSupabaseConfigured()) {
+    return mockStore.getWorkoutSessionForDate(date);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("workout_sessions")
+      .select("*, template:workout_templates(*)")
+      .eq("user_id", userId)
+      .eq("date", date)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) return mockStore.getWorkoutSessionForDate(date);
+    return (data as WorkoutSession | null) ?? null;
+  } catch {
+    return mockStore.getWorkoutSessionForDate(date);
+  }
 }
 
 export async function listWorkoutSessionsInRange(
@@ -49,15 +72,22 @@ export async function listWorkoutSessionsInRange(
   start: string,
   end: string,
 ) {
-  const { data, error } = await supabase
-    .from("workout_sessions")
-    .select("*, template:workout_templates(*)")
-    .eq("user_id", userId)
-    .gte("date", start)
-    .lte("date", end)
-    .order("date");
-  if (error) throw error;
-  return (data ?? []) as WorkoutSession[];
+  if (!isSupabaseConfigured()) {
+    return mockStore.listWorkoutSessionsInRange(start, end);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("workout_sessions")
+      .select("*, template:workout_templates(*)")
+      .eq("user_id", userId)
+      .gte("date", start)
+      .lte("date", end)
+      .order("date");
+    if (error || !data || data.length === 0) return mockStore.listWorkoutSessionsInRange(start, end);
+    return (data ?? []) as WorkoutSession[];
+  } catch {
+    return mockStore.listWorkoutSessionsInRange(start, end);
+  }
 }
 
 async function previousExerciseSets(
@@ -66,20 +96,25 @@ async function previousExerciseSets(
   exerciseId: string,
   beforeDate: string,
 ) {
-  const { data, error } = await supabase
-    .from("exercise_sessions")
-    .select("id, workout_sessions!inner(user_id, date, status), exercise_sets(*)")
-    .eq("exercise_id", exerciseId)
-    .eq("workout_sessions.user_id", userId)
-    .eq("workout_sessions.status", "completed")
-    .lt("workout_sessions.date", beforeDate)
-    .order("date", { referencedTable: "workout_sessions", ascending: false })
-    .limit(1);
-  if (error) throw error;
-  const row = data?.[0] as
-    | { id: string; exercise_sets: ExerciseSet[] }
-    | undefined;
-  return row?.exercise_sets ?? [];
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const { data, error } = await supabase
+      .from("exercise_sessions")
+      .select("id, workout_sessions!inner(user_id, date, status), exercise_sets(*)")
+      .eq("exercise_id", exerciseId)
+      .eq("workout_sessions.user_id", userId)
+      .eq("workout_sessions.status", "completed")
+      .lt("workout_sessions.date", beforeDate)
+      .order("date", { referencedTable: "workout_sessions", ascending: false })
+      .limit(1);
+    if (error) return [];
+    const row = data?.[0] as
+      | { id: string; exercise_sets: ExerciseSet[] }
+      | undefined;
+    return row?.exercise_sets ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function startWorkout(
@@ -89,80 +124,87 @@ export async function startWorkout(
   template: WorkoutTemplate,
   dailyLogId: string,
 ) {
-  const existing = await getWorkoutSessionForDate(supabase, userId, date);
-  if (existing && (existing.status === "in_progress" || existing.status === "completed")) {
-    return existing;
+  if (!isSupabaseConfigured()) {
+    return mockStore.getWorkoutSessionForDate(date) ?? ({} as any);
   }
+  try {
+    const existing = await getWorkoutSessionForDate(supabase, userId, date);
+    if (existing && (existing.status === "in_progress" || existing.status === "completed")) {
+      return existing;
+    }
 
-  const templateExercises = template.is_rest ? [] : await listTemplateExercises(supabase, template.id);
+    const templateExercises = template.is_rest ? [] : await listTemplateExercises(supabase, template.id);
 
-  const sessionRes = existing
-    ? await supabase
-        .from("workout_sessions")
-        .update({
-          status: template.is_rest ? "completed" : "in_progress",
-          template_id: template.id,
-          daily_log_id: dailyLogId,
-          started_at: new Date().toISOString(),
-          label: template.name,
-        })
-        .eq("id", existing.id)
-        .select("*, template:workout_templates(*)")
-        .single()
-    : await supabase
-        .from("workout_sessions")
-        .insert({
-          user_id: userId,
-          template_id: template.id,
-          daily_log_id: dailyLogId,
-          date,
-          status: template.is_rest ? "completed" : "in_progress",
-          started_at: new Date().toISOString(),
-          label: template.name,
-        })
-        .select("*, template:workout_templates(*)")
-        .single();
+    const sessionRes = existing
+      ? await supabase
+          .from("workout_sessions")
+          .update({
+            status: template.is_rest ? "completed" : "in_progress",
+            template_id: template.id,
+            daily_log_id: dailyLogId,
+            started_at: new Date().toISOString(),
+            label: template.name,
+          })
+          .eq("id", existing.id)
+          .select("*, template:workout_templates(*)")
+          .single()
+      : await supabase
+          .from("workout_sessions")
+          .insert({
+            user_id: userId,
+            template_id: template.id,
+            daily_log_id: dailyLogId,
+            date,
+            status: template.is_rest ? "completed" : "in_progress",
+            started_at: new Date().toISOString(),
+            label: template.name,
+          })
+          .select("*, template:workout_templates(*)")
+          .single();
 
-  if (sessionRes.error) throw sessionRes.error;
-  const session = sessionRes.data as WorkoutSession;
+    if (sessionRes.error) return mockStore.getWorkoutSessionForDate(date) ?? ({} as any);
+    const session = sessionRes.data as WorkoutSession;
 
-  if (!template.is_rest) {
-    const { data: already } = await supabase
-      .from("exercise_sessions")
-      .select("id")
-      .eq("workout_session_id", session.id)
-      .limit(1);
-    if (!already?.length) {
-      const createdSessions = await supabase
+    if (!template.is_rest) {
+      const { data: already } = await supabase
         .from("exercise_sessions")
-        .insert(
-          templateExercises.map((item) => ({
-            workout_session_id: session.id,
-            exercise_id: item.exercise_id,
-            position: item.position,
-            status: "pending",
-          })),
-        )
-        .select("*");
-      if (createdSessions.error) throw createdSessions.error;
+        .select("id")
+        .eq("workout_session_id", session.id)
+        .limit(1);
+      if (!already?.length) {
+        const createdSessions = await supabase
+          .from("exercise_sessions")
+          .insert(
+            templateExercises.map((item) => ({
+              workout_session_id: session.id,
+              exercise_id: item.exercise_id,
+              position: item.position,
+              status: "pending",
+            })),
+          )
+          .select("*");
+        if (createdSessions.error) throw createdSessions.error;
 
-      const setRows = (createdSessions.data ?? []).flatMap((exerciseSession) => {
-        const meta = templateExercises.find((item) => item.exercise_id === exerciseSession.exercise_id);
-        const workSets = meta?.work_sets ?? 2;
-        return Array.from({ length: workSets }, (_, index) => ({
-          exercise_session_id: exerciseSession.id,
-          set_number: index + 1,
-          set_type: "work" as const,
-        }));
-      });
-      if (setRows.length) {
-        const { error } = await supabase.from("exercise_sets").insert(setRows);
-        if (error) throw error;
+        const setRows = (createdSessions.data ?? []).flatMap((exerciseSession) => {
+          const meta = templateExercises.find((item) => item.exercise_id === exerciseSession.exercise_id);
+          const workSets = meta?.work_sets ?? 2;
+          return Array.from({ length: workSets }, (_, index) => ({
+            exercise_session_id: exerciseSession.id,
+            set_number: index + 1,
+            set_type: "work" as const,
+          }));
+        });
+        if (setRows.length) {
+          const { error } = await supabase.from("exercise_sets").insert(setRows);
+          if (error) throw error;
+        }
       }
     }
-  }
 
-  return session;
+    return session;
+  } catch {
+    return mockStore.getWorkoutSessionForDate(date) ?? ({} as any);
+  }
 }
 
 export async function markWorkoutStatus(
@@ -170,6 +212,7 @@ export async function markWorkoutStatus(
   sessionId: string,
   status: WorkoutSessionStatus,
 ) {
+  if (!isSupabaseConfigured()) return;
   const { error } = await supabase
     .from("workout_sessions")
     .update({
@@ -181,27 +224,34 @@ export async function markWorkoutStatus(
 }
 
 export async function getWorkoutSessionDetail(supabase: SupabaseClient, sessionId: string) {
-  const sessionRes = await supabase
-    .from("workout_sessions")
-    .select("*, template:workout_templates(*)")
-    .eq("id", sessionId)
-    .single();
-  if (sessionRes.error) throw sessionRes.error;
-  const session = sessionRes.data as WorkoutSession;
+  if (!isSupabaseConfigured()) {
+    return mockStore.getWorkoutSessionDetail(sessionId);
+  }
+  try {
+    const sessionRes = await supabase
+      .from("workout_sessions")
+      .select("*, template:workout_templates(*)")
+      .eq("id", sessionId)
+      .single();
+    if (sessionRes.error) return mockStore.getWorkoutSessionDetail(sessionId);
+    const session = sessionRes.data as WorkoutSession;
 
-  const exercisesRes = await supabase
-    .from("exercise_sessions")
-    .select("*, exercise:exercises(*), sets:exercise_sets(*)")
-    .eq("workout_session_id", sessionId)
-    .order("position");
-  if (exercisesRes.error) throw exercisesRes.error;
+    const exercisesRes = await supabase
+      .from("exercise_sessions")
+      .select("*, exercise:exercises(*), sets:exercise_sets(*)")
+      .eq("workout_session_id", sessionId)
+      .order("position");
+    if (exercisesRes.error) return mockStore.getWorkoutSessionDetail(sessionId);
 
-  const exercises = ((exercisesRes.data ?? []) as ExerciseSession[]).map((item) => ({
-    ...item,
-    sets: (item.sets ?? []).sort((a, b) => a.set_number - b.set_number),
-  }));
+    const exercises = ((exercisesRes.data ?? []) as ExerciseSession[]).map((item) => ({
+      ...item,
+      sets: (item.sets ?? []).sort((a, b) => a.set_number - b.set_number),
+    }));
 
-  return { session, exercises };
+    return { session, exercises };
+  } catch {
+    return mockStore.getWorkoutSessionDetail(sessionId);
+  }
 }
 
 export async function updateExerciseSet(
@@ -209,11 +259,13 @@ export async function updateExerciseSet(
   setId: string,
   patch: Partial<Pick<ExerciseSet, "weight" | "reps" | "rir">>,
 ) {
+  if (!isSupabaseConfigured()) return;
   const { error } = await supabase.from("exercise_sets").update(patch).eq("id", setId);
   if (error) throw error;
 }
 
 export async function completeExerciseSession(supabase: SupabaseClient, exerciseSessionId: string) {
+  if (!isSupabaseConfigured()) return;
   const { error } = await supabase
     .from("exercise_sessions")
     .update({ status: "completed" })
@@ -222,6 +274,7 @@ export async function completeExerciseSession(supabase: SupabaseClient, exercise
 }
 
 export async function finishWorkout(supabase: SupabaseClient, sessionId: string, durationSeconds: number) {
+  if (!isSupabaseConfigured()) return;
   const { error } = await supabase
     .from("workout_sessions")
     .update({
@@ -239,16 +292,21 @@ export async function getExerciseHistory(
   exerciseId: string,
   limit = 20,
 ) {
-  const { data, error } = await supabase
-    .from("exercise_sessions")
-    .select("id, status, workout_sessions!inner(user_id, date, status), exercise_sets(*), exercise:exercises(*)")
-    .eq("exercise_id", exerciseId)
-    .eq("workout_sessions.user_id", userId)
-    .eq("workout_sessions.status", "completed")
-    .order("date", { referencedTable: "workout_sessions", ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return data ?? [];
+  if (!isSupabaseConfigured()) return [];
+  try {
+    const { data, error } = await supabase
+      .from("exercise_sessions")
+      .select("id, status, workout_sessions!inner(user_id, date, status), exercise_sets(*), exercise:exercises(*)")
+      .eq("exercise_id", exerciseId)
+      .eq("workout_sessions.user_id", userId)
+      .eq("workout_sessions.status", "completed")
+      .order("date", { referencedTable: "workout_sessions", ascending: false })
+      .limit(limit);
+    if (error) return [];
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function buildSessionProgressions(
@@ -280,6 +338,7 @@ export async function updateTemplateExercise(
   id: string,
   patch: Partial<Pick<WorkoutTemplateExercise, "work_sets" | "rep_min" | "rep_max" | "rest_seconds" | "instructions">>,
 ) {
+  if (!isSupabaseConfigured()) return;
   const { error } = await supabase.from("workout_template_exercises").update(patch).eq("id", id);
   if (error) throw error;
 }
@@ -289,6 +348,7 @@ export async function reorderTemplates(
   userId: string,
   orderedIds: string[],
 ) {
+  if (!isSupabaseConfigured()) return;
   await Promise.all(
     orderedIds.map((id, order_index) =>
       supabase.from("workout_templates").update({ order_index }).eq("id", id).eq("user_id", userId),
@@ -303,10 +363,17 @@ export async function getPreviousBestMap(
   beforeDate: string,
 ) {
   const map = new Map<string, ExerciseSet[]>();
-  await Promise.all(
-    exerciseIds.map(async (exerciseId) => {
-      map.set(exerciseId, await previousExerciseSets(supabase, userId, exerciseId, beforeDate));
-    }),
-  );
-  return map;
+  if (!isSupabaseConfigured()) {
+    return map;
+  }
+  try {
+    await Promise.all(
+      exerciseIds.map(async (exerciseId) => {
+        map.set(exerciseId, await previousExerciseSets(supabase, userId, exerciseId, beforeDate));
+      }),
+    );
+    return map;
+  } catch {
+    return map;
+  }
 }

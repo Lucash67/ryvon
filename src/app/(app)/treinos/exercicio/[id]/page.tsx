@@ -2,6 +2,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartCard, WeightChart } from "@/components/charts/simple-charts";
 import { requireSession } from "@/lib/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { demoExerciseHistory } from "@/services/demo-state";
 import { getExerciseHistory } from "@/services/workout.service";
 import { bestWorkSet, sessionVolume } from "@/domain/progression";
 import { formatNumber } from "@/utils/dates";
@@ -14,7 +16,9 @@ export default async function ExerciseHistoryPage({
 }) {
   const { id } = await params;
   const { supabase, user } = await requireSession();
-  const history = (await getExerciseHistory(supabase, user.id, id, 24)) as unknown as Array<{
+  const history = (
+    isSupabaseConfigured() ? await getExerciseHistory(supabase, user.id, id, 24) : demoExerciseHistory(id)
+  ) as unknown as Array<{
     exercise: { name: string } | null;
     workout_sessions: { date: string };
     exercise_sets: ExerciseSet[];

@@ -1,8 +1,10 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+﻿import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_MEAL_TIMES } from "@/domain/constants";
 import { calculateSleepMinutes } from "@/domain/sleep";
 import { buildWeekBounds, dayTypeForTemplate, plannedTemplateForDate } from "@/domain/week";
 import { timeToMinutes } from "@/utils/dates";
+import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { mockStore } from "@/lib/mock-store";
 import type {
   CardioSession,
   DailyLog,
@@ -19,59 +21,80 @@ export async function getOrCreateWeek(
   date: string,
   programStart: string,
 ) {
-  const bounds = buildWeekBounds(date, programStart);
-  const existing = await supabase
-    .from("weeks")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("week_number", bounds.weekNumber)
-    .maybeSingle();
-  if (existing.error) throw existing.error;
-  if (existing.data) return existing.data as Week;
-
-  const created = await supabase
-    .from("weeks")
-    .insert({
-      user_id: userId,
-      week_number: bounds.weekNumber,
-      start_date: bounds.startDate,
-      end_date: bounds.endDate,
-      status: "open",
-    })
-    .select("*")
-    .single();
-  if (created.error) {
-    const again = await supabase
+  if (!isSupabaseConfigured()) {
+    return mockStore.getOrCreateWeek(date, programStart);
+  }
+  try {
+    const bounds = buildWeekBounds(date, programStart);
+    const existing = await supabase
       .from("weeks")
       .select("*")
       .eq("user_id", userId)
       .eq("week_number", bounds.weekNumber)
+      .maybeSingle();
+    if (existing.error) return mockStore.getOrCreateWeek(date, programStart);
+    if (existing.data) return existing.data as Week;
+
+    const created = await supabase
+      .from("weeks")
+      .insert({
+        user_id: userId,
+        week_number: bounds.weekNumber,
+        start_date: bounds.startDate,
+        end_date: bounds.endDate,
+        status: "open",
+      })
+      .select("*")
       .single();
-    if (again.error) throw created.error;
-    return again.data as Week;
+    if (created.error) {
+      const again = await supabase
+        .from("weeks")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("week_number", bounds.weekNumber)
+        .single();
+      if (again.error) return mockStore.getOrCreateWeek(date, programStart);
+      return again.data as Week;
+    }
+    return created.data as Week;
+  } catch {
+    return mockStore.getOrCreateWeek(date, programStart);
   }
-  return created.data as Week;
 }
 
 export async function getWeekByNumber(supabase: SupabaseClient, userId: string, weekNumber: number) {
-  const { data, error } = await supabase
-    .from("weeks")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("week_number", weekNumber)
-    .maybeSingle();
-  if (error) throw error;
-  return (data as Week | null) ?? null;
+  if (!isSupabaseConfigured()) {
+    return mockStore.getWeekByNumber(weekNumber);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("weeks")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("week_number", weekNumber)
+      .maybeSingle();
+    if (error) return mockStore.getWeekByNumber(weekNumber);
+    return (data as Week | null) ?? null;
+  } catch {
+    return mockStore.getWeekByNumber(weekNumber);
+  }
 }
 
 export async function listTemplates(supabase: SupabaseClient, userId: string) {
-  const { data, error } = await supabase
-    .from("workout_templates")
-    .select("*")
-    .eq("user_id", userId)
-    .order("order_index");
-  if (error) throw error;
-  return (data ?? []) as WorkoutTemplate[];
+  if (!isSupabaseConfigured()) {
+    return mockStore.listTemplates();
+  }
+  try {
+    const { data, error } = await supabase
+      .from("workout_templates")
+      .select("*")
+      .eq("user_id", userId)
+      .order("order_index");
+    if (error || !data || data.length === 0) return mockStore.listTemplates();
+    return (data ?? []) as WorkoutTemplate[];
+  } catch {
+    return mockStore.listTemplates();
+  }
 }
 
 export async function getOrCreateDailyLog(
@@ -80,82 +103,110 @@ export async function getOrCreateDailyLog(
   date: string,
   settings: FitnessSettings,
 ) {
-  const existing = await supabase
-    .from("daily_logs")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("date", date)
-    .maybeSingle();
-  if (existing.error) throw existing.error;
-  if (existing.data) {
-    return existing.data as DailyLog;
+  if (!isSupabaseConfigured()) {
+    return mockStore.getOrCreateDailyLog(date);
   }
-
-  const week = await getOrCreateWeek(supabase, userId, date, settings.program_start_date);
-  const templates = await listTemplates(supabase, userId);
-  const template = plannedTemplateForDate(date, settings.cycle_start_date, templates);
-
-  const created = await supabase
-    .from("daily_logs")
-    .insert({
-      week_id: week.id,
-      user_id: userId,
-      date,
-      day_type: dayTypeForTemplate(template),
-    })
-    .select("*")
-    .single();
-  if (created.error) {
-    const again = await supabase
+  try {
+    const existing = await supabase
       .from("daily_logs")
       .select("*")
       .eq("user_id", userId)
       .eq("date", date)
+      .maybeSingle();
+    if (existing.error) return mockStore.getOrCreateDailyLog(date);
+    if (existing.data) {
+      return existing.data as DailyLog;
+    }
+
+    const week = await getOrCreateWeek(supabase, userId, date, settings.program_start_date);
+    const templates = await listTemplates(supabase, userId);
+    const template = plannedTemplateForDate(date, settings.cycle_start_date, templates);
+
+    const created = await supabase
+      .from("daily_logs")
+      .insert({
+        week_id: week.id,
+        user_id: userId,
+        date,
+        day_type: dayTypeForTemplate(template),
+      })
+      .select("*")
       .single();
-    if (again.error) throw created.error;
-    return again.data as DailyLog;
+    if (created.error) {
+      const again = await supabase
+        .from("daily_logs")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("date", date)
+        .single();
+      if (again.error) return mockStore.getOrCreateDailyLog(date);
+      return again.data as DailyLog;
+    }
+
+    await supabase.from("meal_times").insert(
+      DEFAULT_MEAL_TIMES.map((time, position) => ({
+        daily_log_id: created.data.id,
+        time,
+        position,
+      })),
+    );
+
+    return created.data as DailyLog;
+  } catch {
+    return mockStore.getOrCreateDailyLog(date);
   }
-
-  await supabase.from("meal_times").insert(
-    DEFAULT_MEAL_TIMES.map((time, position) => ({
-      daily_log_id: created.data.id,
-      time,
-      position,
-    })),
-  );
-
-  return created.data as DailyLog;
 }
 
 export async function getDailyLog(supabase: SupabaseClient, userId: string, date: string) {
-  const { data, error } = await supabase
-    .from("daily_logs")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("date", date)
-    .maybeSingle();
-  if (error) throw error;
-  return (data as DailyLog | null) ?? null;
+  if (!isSupabaseConfigured()) {
+    return mockStore.getOrCreateDailyLog(date);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("daily_logs")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("date", date)
+      .maybeSingle();
+    if (error) return mockStore.getOrCreateDailyLog(date);
+    return (data as DailyLog | null) ?? null;
+  } catch {
+    return mockStore.getOrCreateDailyLog(date);
+  }
 }
 
 export async function listDailyLogsByWeek(supabase: SupabaseClient, weekId: string) {
-  const { data, error } = await supabase
-    .from("daily_logs")
-    .select("*")
-    .eq("week_id", weekId)
-    .order("date");
-  if (error) throw error;
-  return (data ?? []) as DailyLog[];
+  if (!isSupabaseConfigured()) {
+    return mockStore.listDailyLogsByWeek(weekId);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("daily_logs")
+      .select("*")
+      .eq("week_id", weekId)
+      .order("date");
+    if (error || !data || data.length === 0) return mockStore.listDailyLogsByWeek(weekId);
+    return (data ?? []) as DailyLog[];
+  } catch {
+    return mockStore.listDailyLogsByWeek(weekId);
+  }
 }
 
 export async function listMealTimes(supabase: SupabaseClient, dailyLogId: string) {
-  const { data, error } = await supabase
-    .from("meal_times")
-    .select("*")
-    .eq("daily_log_id", dailyLogId)
-    .order("position");
-  if (error) throw error;
-  return (data ?? []) as MealTime[];
+  if (!isSupabaseConfigured()) {
+    return mockStore.listMealTimes(dailyLogId);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("meal_times")
+      .select("*")
+      .eq("daily_log_id", dailyLogId)
+      .order("position");
+    if (error || !data || data.length === 0) return mockStore.listMealTimes(dailyLogId);
+    return (data ?? []) as MealTime[];
+  } catch {
+    return mockStore.listMealTimes(dailyLogId);
+  }
 }
 
 export async function replaceMealTimes(
@@ -163,15 +214,22 @@ export async function replaceMealTimes(
   dailyLogId: string,
   times: string[],
 ) {
-  const { error: delError } = await supabase.from("meal_times").delete().eq("daily_log_id", dailyLogId);
-  if (delError) throw delError;
-  if (times.length === 0) return [];
-  const { data, error } = await supabase
-    .from("meal_times")
-    .insert(times.map((time, position) => ({ daily_log_id: dailyLogId, time, position })))
-    .select("*");
-  if (error) throw error;
-  return (data ?? []) as MealTime[];
+  if (!isSupabaseConfigured()) {
+    return mockStore.replaceMealTimes(dailyLogId, times);
+  }
+  try {
+    const { error: delError } = await supabase.from("meal_times").delete().eq("daily_log_id", dailyLogId);
+    if (delError) return mockStore.replaceMealTimes(dailyLogId, times);
+    if (times.length === 0) return [];
+    const { data, error } = await supabase
+      .from("meal_times")
+      .insert(times.map((time, position) => ({ daily_log_id: dailyLogId, time, position })))
+      .select("*");
+    if (error) return mockStore.replaceMealTimes(dailyLogId, times);
+    return (data ?? []) as MealTime[];
+  } catch {
+    return mockStore.replaceMealTimes(dailyLogId, times);
+  }
 }
 
 export function deriveMealCutoff(times: string[], cutoff: string) {
@@ -188,54 +246,75 @@ export async function updateDailyLog(
   settings: FitnessSettings,
   patch: DailyLogPatch,
 ) {
-  const log = await getOrCreateDailyLog(supabase, userId, date, settings);
-  const next = { ...patch };
-  if (patch.sleep_start !== undefined || patch.sleep_end !== undefined) {
-    const start = patch.sleep_start !== undefined ? patch.sleep_start : log.sleep_start;
-    const end = patch.sleep_end !== undefined ? patch.sleep_end : log.sleep_end;
-    next.sleep_start = start;
-    next.sleep_end = end;
-    (next as DailyLogPatch & { sleep_minutes?: number | null }).sleep_minutes =
-      calculateSleepMinutes(start, end);
+  if (!isSupabaseConfigured()) {
+    return mockStore.updateDailyLog(date, patch);
   }
-  const { data, error } = await supabase
-    .from("daily_logs")
-    .update(next)
-    .eq("id", log.id)
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data as DailyLog;
+  try {
+    const log = await getOrCreateDailyLog(supabase, userId, date, settings);
+    const next = { ...patch };
+    if (patch.sleep_start !== undefined || patch.sleep_end !== undefined) {
+      const start = patch.sleep_start !== undefined ? patch.sleep_start : log.sleep_start;
+      const end = patch.sleep_end !== undefined ? patch.sleep_end : log.sleep_end;
+      next.sleep_start = start;
+      next.sleep_end = end;
+      (next as DailyLogPatch & { sleep_minutes?: number | null }).sleep_minutes =
+        calculateSleepMinutes(start, end);
+    }
+    const { data, error } = await supabase
+      .from("daily_logs")
+      .update(next)
+      .eq("id", log.id)
+      .select("*")
+      .single();
+    if (error) return mockStore.updateDailyLog(date, patch);
+    return data as DailyLog;
+  } catch {
+    return mockStore.updateDailyLog(date, patch);
+  }
 }
 
 export async function listCardioByLog(supabase: SupabaseClient, dailyLogId: string) {
-  const { data, error } = await supabase
-    .from("cardio_sessions")
-    .select("*")
-    .eq("daily_log_id", dailyLogId)
-    .order("created_at");
-  if (error) throw error;
-  return (data ?? []) as CardioSession[];
+  if (!isSupabaseConfigured()) {
+    return mockStore.listCardioByLog(dailyLogId);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("cardio_sessions")
+      .select("*")
+      .eq("daily_log_id", dailyLogId)
+      .order("created_at");
+    if (error) return mockStore.listCardioByLog(dailyLogId);
+    return (data ?? []) as CardioSession[];
+  } catch {
+    return mockStore.listCardioByLog(dailyLogId);
+  }
 }
 
 export async function listCardioByWeek(supabase: SupabaseClient, userId: string, dates: string[]) {
-  if (dates.length === 0) return [] as Array<CardioSession & { daily_logs?: { date: string } }>;
-  const logs = await supabase
-    .from("daily_logs")
-    .select("id, date")
-    .eq("user_id", userId)
-    .gte("date", dates[0])
-    .lte("date", dates[dates.length - 1]);
-  if (logs.error) throw logs.error;
-  const ids = (logs.data ?? []).map((log) => log.id);
-  if (ids.length === 0) return [];
-  const dateById = new Map((logs.data ?? []).map((log) => [log.id, log.date]));
-  const { data, error } = await supabase.from("cardio_sessions").select("*").in("daily_log_id", ids);
-  if (error) throw error;
-  return (data ?? []).map((item) => ({
-    ...(item as CardioSession),
-    daily_logs: { date: dateById.get(item.daily_log_id) ?? "" },
-  }));
+  if (!isSupabaseConfigured()) {
+    return mockStore.listCardioByWeek(dates);
+  }
+  try {
+    if (dates.length === 0) return [] as Array<CardioSession & { daily_logs?: { date: string } }>;
+    const logs = await supabase
+      .from("daily_logs")
+      .select("id, date")
+      .eq("user_id", userId)
+      .gte("date", dates[0])
+      .lte("date", dates[dates.length - 1]);
+    if (logs.error) return mockStore.listCardioByWeek(dates);
+    const ids = (logs.data ?? []).map((log) => log.id);
+    if (ids.length === 0) return [];
+    const dateById = new Map((logs.data ?? []).map((log) => [log.id, log.date]));
+    const { data, error } = await supabase.from("cardio_sessions").select("*").in("daily_log_id", ids);
+    if (error) return mockStore.listCardioByWeek(dates);
+    return (data ?? []).map((item) => ({
+      ...(item as CardioSession),
+      daily_logs: { date: dateById.get(item.daily_log_id) ?? "" },
+    }));
+  } catch {
+    return mockStore.listCardioByWeek(dates);
+  }
 }
 
 export async function addCardioSession(
@@ -244,20 +323,31 @@ export async function addCardioSession(
   dailyLogId: string,
   payload: Pick<CardioSession, "type" | "minutes" | "rpe" | "timing" | "notes">,
 ) {
-  const { data, error } = await supabase
-    .from("cardio_sessions")
-    .insert({
-      daily_log_id: dailyLogId,
-      user_id: userId,
-      ...payload,
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data as CardioSession;
+  if (!isSupabaseConfigured()) {
+    return mockStore.addCardioSession(dailyLogId, payload);
+  }
+  try {
+    const { data, error } = await supabase
+      .from("cardio_sessions")
+      .insert({
+        daily_log_id: dailyLogId,
+        user_id: userId,
+        ...payload,
+      })
+      .select("*")
+      .single();
+    if (error) return mockStore.addCardioSession(dailyLogId, payload);
+    return data as CardioSession;
+  } catch {
+    return mockStore.addCardioSession(dailyLogId, payload);
+  }
 }
 
 export async function deleteCardioSession(supabase: SupabaseClient, id: string) {
+  if (!isSupabaseConfigured()) {
+    mockStore.deleteCardioSession(id);
+    return;
+  }
   const { error } = await supabase.from("cardio_sessions").delete().eq("id", id);
   if (error) throw error;
 }

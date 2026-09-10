@@ -5,8 +5,13 @@ import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label, Textarea } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { DayStrip, FormCard } from "@/components/v8";
+import { buildWeekBounds } from "@/domain/week";
+import { WEEKDAY_SHORT } from "@/domain/constants";
+import { datesInRange, parseDate } from "@/utils/dates";
+import { visualCap } from "@/domain/adherence";
 import {
   addCardioAction,
   markWorkoutStatusAction,
@@ -100,9 +105,23 @@ export function HojeClient({ date, log, meals, cardio, session, planned, setting
   }, 800);
 
   const dayOn = (planned ? !planned.is_rest : log.day_type === "on");
+  const week = buildWeekBounds(date, settings.program_start_date);
+  const weekDates = datesInRange(week.startDate, week.endDate);
+  const dayStrip = weekDates.map((d) => ({
+    date: d,
+    weekday: WEEKDAY_SHORT[parseDate(d).getDay()].slice(0, 3),
+    dayNum: d.slice(8),
+  }));
 
   return (
     <div>
+      <DayStrip
+        days={dayStrip}
+        activeDate={date}
+        onSelect={(d) => router.push(`/hoje?date=${d}`)}
+        className="mb-4"
+      />
+
       <PageHeader
         eyebrow={formatWeekday(date)}
         title={formatLongDate(date)}
@@ -110,12 +129,10 @@ export function HojeClient({ date, log, meals, cardio, session, planned, setting
         action={<Badge tone={dayOn ? "primary" : "neutral"}>{dayOn ? "DAY ON" : "DAY OFF"}</Badge>}
       />
 
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Sono</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-[14px] lg:grid-cols-2">
+        <div className="space-y-[14px]">
+        <FormCard title="Sono">
+          <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <Label>Dormiu</Label>
               <Input type="time" value={sleepStart} onChange={(e) => setSleepStart(e.target.value)} />
@@ -138,17 +155,14 @@ export function HojeClient({ date, log, meals, cardio, session, planned, setting
                 ))}
               </div>
             </div>
-            <p className="text-sm text-muted sm:col-span-3">
+            <p className="text-[11px] text-muted sm:col-span-3">
               Total: {minutesToHoursLabel(sleepMinutes)}
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </FormCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Cardio</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <FormCard title="Cardio">
+          <div className="space-y-3">
             {cardio.map((item) => (
               <div key={item.id} className="surface-muted flex items-center justify-between rounded-xl px-3 py-3">
                 <p className="text-sm">
@@ -201,14 +215,26 @@ export function HojeClient({ date, log, meals, cardio, session, planned, setting
               </div>
               <Button type="submit">Adicionar sessão</Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </FormCard>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Refeições</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="space-y-[14px]">
+        <FormCard title="Nutrição">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <MacroField label="Calorias" value={calories} onChange={setCalories} target={targets.calories} unit="kcal" />
+            <MacroField label="Proteína" value={protein} onChange={setProtein} target={targets.protein} unit="g" />
+            <MacroField label="Carboidratos" value={carbs} onChange={setCarbs} target={targets.carbs} unit="g" />
+            <MacroField label="Gorduras" value={fat} onChange={setFat} target={targets.fat} unit="g" />
+          </div>
+          <Progress
+            className="mt-3"
+            value={calories ? visualCap(Number(calories) / targets.calories) * 100 : 0}
+          />
+        </FormCard>
+
+        <FormCard title="Refeições">
+          <div className="space-y-3">
             {times.map((time, index) => (
               <div key={`${time}-${index}`} className="flex gap-2">
                 <Input
@@ -240,27 +266,14 @@ export function HojeClient({ date, log, meals, cardio, session, planned, setting
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </FormCard>
+        </div>
+      </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Nutrição</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <MacroField label="Calorias" value={calories} onChange={setCalories} target={targets.calories} unit="kcal" />
-            <MacroField label="Proteína" value={protein} onChange={setProtein} target={targets.protein} unit="g" />
-            <MacroField label="Carboidratos" value={carbs} onChange={setCarbs} target={targets.carbs} unit="g" />
-            <MacroField label="Gorduras" value={fat} onChange={setFat} target={targets.fat} unit="g" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Treino</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-lg font-semibold">{planned?.name ?? "Sem programação"}</p>
+        <FormCard title="Treino" className="mt-[14px]">
+          <div className="space-y-3">
+            <p className="text-[20px] font-black">{planned?.name ?? "Sem programação"}</p>
             {planned?.is_rest ? (
               <Badge>DESCANSO</Badge>
             ) : (
@@ -287,15 +300,13 @@ export function HojeClient({ date, log, meals, cardio, session, planned, setting
                 ))}
               </div>
             )}
-            {session ? <p className="text-sm text-muted">Status: {session.status}</p> : null}
-          </CardContent>
-        </Card>
+            {session ? <p className="text-[11px] text-muted">Status: {session.status}</p> : null}
+          </div>
+        </FormCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Nível de atividade</CardTitle>
-          </CardHeader>
-          <CardContent className="flex gap-2">
+      <div className="mt-[14px] grid gap-[14px] lg:grid-cols-2">
+        <FormCard title="Nível de atividade">
+          <div className="flex flex-wrap gap-2">
             {([
               ["low", "Baixo"],
               ["medium", "Médio"],
@@ -305,17 +316,12 @@ export function HojeClient({ date, log, meals, cardio, session, planned, setting
                 {label}
               </Button>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </FormCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Observações do dia</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Como foi o dia?" />
-          </CardContent>
-        </Card>
+        <FormCard title="Observações do dia">
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Como foi o dia?" />
+        </FormCard>
       </div>
     </div>
   );

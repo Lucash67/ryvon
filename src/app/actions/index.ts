@@ -48,7 +48,7 @@ import {
 } from "@/services/demo-state";
 import type { CardioSession, DailyLogPatch, HealthNote, WorkoutSessionStatus } from "@/types";
 
-function useDemo() {
+function isDemoMode() {
   return !isSupabaseConfigured();
 }
 
@@ -57,7 +57,7 @@ function refresh() {
 }
 
 export async function saveDailyLogAction(date: string, patch: DailyLogPatch) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     const log = demoUpdateDailyLog(date, patch);
     refresh();
     return log;
@@ -75,7 +75,7 @@ export async function saveNutritionAction(date: string, values: unknown) {
 }
 
 export async function saveMealTimesAction(date: string, times: string[]) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     demoReplaceMeals(date, times);
     const derived = deriveMealCutoff(times, "21:30");
     demoUpdateDailyLog(date, { last_meal_at: derived.lastMeal, meal_cutoff_hit: derived.hit });
@@ -99,7 +99,7 @@ export async function addCardioAction(
   payload: Pick<CardioSession, "type" | "minutes" | "rpe" | "timing" | "notes">,
 ) {
   const parsed = cardioSchema.parse(payload);
-  if (useDemo()) {
+  if (isDemoMode()) {
     const session = demoAddCardio(date, {
       ...parsed,
       rpe: parsed.rpe ?? null,
@@ -121,7 +121,7 @@ export async function addCardioAction(
 }
 
 export async function removeCardioAction(id: string) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     demoRemoveCardio(id);
     refresh();
     return;
@@ -133,7 +133,7 @@ export async function removeCardioAction(id: string) {
 
 export async function saveWeightAction(values: unknown) {
   const parsed = weightSchema.parse(values);
-  if (useDemo()) {
+  if (isDemoMode()) {
     const log = demoUpsertWeight({ ...parsed, notes: parsed.notes ?? null });
     refresh();
     return log;
@@ -149,7 +149,7 @@ export async function saveWeightAction(values: unknown) {
 
 export async function saveHealthNoteAction(values: unknown) {
   const parsed = healthNoteSchema.parse(values);
-  if (useDemo()) {
+  if (isDemoMode()) {
     const note = demoAddNote(parsed);
     refresh();
     return note;
@@ -161,7 +161,7 @@ export async function saveHealthNoteAction(values: unknown) {
 }
 
 export async function updateHealthNoteAction(id: string, patch: Partial<Pick<HealthNote, "status" | "note">>) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     refresh();
     return;
   }
@@ -171,7 +171,7 @@ export async function updateHealthNoteAction(id: string, patch: Partial<Pick<Hea
 }
 
 export async function startWorkoutAction(date: string) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     const session = demoStartWorkout(date);
     refresh();
     return session;
@@ -188,7 +188,7 @@ export async function startWorkoutAction(date: string) {
 }
 
 export async function markWorkoutStatusAction(sessionId: string, status: WorkoutSessionStatus, date: string) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     demoMarkWorkout(sessionId, status);
     refresh();
     return;
@@ -204,7 +204,7 @@ export async function saveSetAction(
   setId: string,
   patch: { weight?: number | null; reps?: number | null; rir?: number | null },
 ) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     demoUpdateSet(setId, patch);
     return;
   }
@@ -213,7 +213,7 @@ export async function saveSetAction(
 }
 
 export async function completeExerciseAction(exerciseSessionId: string) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     demoCompleteExercise(exerciseSessionId);
     refresh();
     return;
@@ -224,7 +224,7 @@ export async function completeExerciseAction(exerciseSessionId: string) {
 }
 
 export async function finishWorkoutAction(sessionId: string, durationSeconds: number) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     demoFinishWorkout(sessionId, durationSeconds);
     refresh();
     return;
@@ -236,7 +236,7 @@ export async function finishWorkoutAction(sessionId: string, durationSeconds: nu
 
 export async function saveSettingsAction(values: unknown) {
   const parsed = settingsSchema.parse(values);
-  if (useDemo()) {
+  if (isDemoMode()) {
     const { name, ...settings } = parsed;
     demoUpdateSettings(name, settings);
     refresh();
@@ -253,7 +253,7 @@ export async function saveTemplateExerciseAction(
   id: string,
   patch: { work_sets?: number; rep_min?: number; rep_max?: number; rest_seconds?: number },
 ) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     demoUpdateTemplateExercise(id, patch);
     refresh();
     return;
@@ -264,7 +264,7 @@ export async function saveTemplateExerciseAction(
 }
 
 export async function uploadPhotoAction(formData: FormData) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     refresh();
     return null;
   }
@@ -295,7 +295,7 @@ export async function uploadPhotoAction(formData: FormData) {
 }
 
 export async function signOutAction() {
-  if (isAuthDisabled() || useDemo()) {
+  if (isAuthDisabled() || isDemoMode()) {
     redirect("/dashboard");
   }
   const { supabase } = await requireUser();
@@ -305,7 +305,7 @@ export async function signOutAction() {
 }
 
 export async function ensureTodayLogAction(date: string) {
-  if (useDemo()) {
+  if (isDemoMode()) {
     const today = demoUpdateDailyLog(date, {});
     return { log: today, meals: demoReplaceMeals(date, ["07:00", "12:00", "17:30", "21:30"]) };
   }

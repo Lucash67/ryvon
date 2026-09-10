@@ -1,11 +1,19 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PrintButton } from "@/components/print-button";
+import {
+  ConclusionPill,
+  MetricList,
+  MetricRow,
+  ReportReading,
+  ScoreStrip,
+  SectionHeader,
+} from "@/components/v8";
 import { requireSession } from "@/lib/auth";
 import { loadWeekView } from "@/services/loaders";
 import { verdictLabel } from "@/domain/scores";
 import { formatNumber, minutesToHoursLabel, weekRangeLabel } from "@/utils/dates";
-import { pct } from "@/utils/format";
+import { pct, scoreLabel } from "@/utils/format";
 
 export default async function RelatoriosPage({
   searchParams,
@@ -26,82 +34,95 @@ export default async function RelatoriosPage({
         action={<PrintButton />}
       />
 
-      <section className="space-y-4">
-        <Block title="Veredito geral">
-          <p className="text-3xl font-semibold">{verdictLabel(data.snapshot.verdict)}</p>
-          <p className="mt-2 text-sm text-muted">Score {report.general} / 10</p>
-        </Block>
-        <Block title="Execução">
-          <p>Aderência geral {pct(data.snapshot.adherence.general)}</p>
-          <p>Dias registrados: {summary.days_logged}</p>
-        </Block>
-        <Block title="Treino">
-          <p>
-            {summary.workouts_completed}/{summary.workouts_planned} concluídos · {summary.workouts_missed} perdidos
-          </p>
-          <p>Score {report.training}</p>
-        </Block>
-        <Block title="Nutrição">
-          <p>Média {formatNumber(summary.calories_avg)} kcal · proteína {formatNumber(summary.protein_avg)} g</p>
-          <p>
-            Dias na faixa de calorias: {summary.calorie_days_in_range} · proteína: {summary.protein_days_in_range}
-          </p>
-        </Block>
-        <Block title="Cardio">
-          <p>
-            {summary.cardio_total} min totais · média diária {formatNumber(summary.cardio_avg)} min
-          </p>
-        </Block>
-        <Block title="Sono">
-          <p>Média {minutesToHoursLabel(summary.sleep_avg_minutes)}</p>
-        </Block>
-        <Block title="Indicadores">
-          <p>Treino {pct(data.snapshot.adherence.training)}</p>
-          <p>Nutrição {pct(data.snapshot.adherence.nutrition)}</p>
-          <p>Sono {pct(data.snapshot.adherence.sleep)}</p>
-          <p>Cardio {pct(data.snapshot.adherence.cardio)}</p>
-          <p>Rotina {pct(data.snapshot.adherence.routine)}</p>
-        </Block>
-        <Block title="Leitura da semana">
-          <p>{summary.reading}</p>
-        </Block>
-        <Block title="Principais conclusões">
-          <ul className="list-disc space-y-1 pl-5">
-            {summary.conclusions.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </Block>
-        <Block title="Prioridades próxima semana">
-          <ul className="list-disc space-y-1 pl-5">
-            {summary.priorities.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </Block>
-        <Block title="Comparação">
-          {data.prevSnapshot ? (
-            <p>
-              Sono {minutesToHoursLabel(summary.sleep_avg_minutes)} vs {minutesToHoursLabel(data.prevSnapshot.summary.sleep_avg_minutes)} ·
-              Cardio {summary.cardio_total} vs {data.prevSnapshot.summary.cardio_total} ·
-              Proteína {formatNumber(summary.protein_avg)} vs {formatNumber(data.prevSnapshot.summary.protein_avg)}
-            </p>
-          ) : (
-            <p>Semana anterior ainda não possui dados suficientes.</p>
-          )}
-        </Block>
-      </section>
-    </div>
-  );
-}
+      <ScoreStrip
+        className="mb-[14px]"
+        items={[
+          { label: "Geral", value: scoreLabel(report.general) },
+          { label: "Treino", value: scoreLabel(report.training) },
+          { label: "Nutrição", value: scoreLabel(report.nutrition) },
+          { label: "Cardio", value: scoreLabel(report.cardio) },
+          { label: "Sono", value: scoreLabel(report.sleep) },
+          { label: "Rotina", value: scoreLabel(report.routine) },
+        ]}
+      />
 
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-1 text-sm leading-6">{children}</CardContent>
-    </Card>
+      <div className="grid gap-[14px] lg:grid-cols-2">
+        <Card className="hover:translate-y-0">
+          <CardHeader>
+            <CardTitle className="text-[17px]">Veredito geral</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-[11px] text-muted uppercase">Semana {data.week.week_number}</p>
+            <p className="mt-1 text-[29px] font-black tracking-tight">{verdictLabel(data.snapshot.verdict)}</p>
+            <p className="mt-2 text-[11px] text-muted">Score {report.general} / 10 · Aderência {pct(data.snapshot.adherence.general)}</p>
+            <MetricList className="mt-4">
+              <MetricRow label="Dias registrados" value={String(summary.days_logged)} />
+              <MetricRow label="Treinos" value={`${summary.workouts_completed}/${summary.workouts_planned}`} />
+              <MetricRow label="Cardio" value={`${summary.cardio_total} min`} />
+              <MetricRow label="Sono médio" value={minutesToHoursLabel(summary.sleep_avg_minutes)} />
+              <MetricRow label="Proteína média" value={`${formatNumber(summary.protein_avg)} g`} />
+            </MetricList>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:translate-y-0">
+          <CardHeader>
+            <CardTitle className="text-[17px]">Prioridades próxima semana</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MetricList>
+              {summary.priorities.length ? (
+                summary.priorities.map((item) => <MetricRow key={item} label="Ação" value={item} />)
+              ) : (
+                <p className="text-[11px] text-muted">Sem prioridades automáticas para esta semana.</p>
+              )}
+            </MetricList>
+          </CardContent>
+        </Card>
+      </div>
+
+      <SectionHeader title="Leitura da semana" />
+      <div className="grid gap-[14px] lg:grid-cols-2">
+        <Card className="hover:translate-y-0">
+          <CardContent className="py-5">
+            <ReportReading>{summary.reading}</ReportReading>
+          </CardContent>
+        </Card>
+        <Card className="hover:translate-y-0">
+          <CardHeader>
+            <CardTitle className="text-[17px]">Principais conclusões</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {summary.conclusions.map((item) => (
+              <ConclusionPill key={item}>{item}</ConclusionPill>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <SectionHeader title="Comparação com anterior" />
+      <Card className="hover:translate-y-0">
+        <CardContent className="py-5">
+          {data.prevSnapshot ? (
+            <MetricList>
+              <MetricRow
+                label="Sono"
+                value={`${minutesToHoursLabel(summary.sleep_avg_minutes)} → ${minutesToHoursLabel(data.prevSnapshot.summary.sleep_avg_minutes)}`}
+              />
+              <MetricRow
+                label="Cardio"
+                value={`${summary.cardio_total} min → ${data.prevSnapshot.summary.cardio_total} min`}
+              />
+              <MetricRow
+                label="Proteína"
+                value={`${formatNumber(summary.protein_avg)} g → ${formatNumber(data.prevSnapshot.summary.protein_avg)} g`}
+              />
+            </MetricList>
+          ) : (
+            <p className="text-[11px] text-muted">Semana anterior ainda não possui dados suficientes.</p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

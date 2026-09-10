@@ -47,7 +47,7 @@ export function ChartCard({
         <CardTitle>{title}</CardTitle>
         {action}
       </CardHeader>
-      <CardContent className="h-64">{children}</CardContent>
+      <CardContent className="h-[235px]">{children}</CardContent>
     </Card>
   );
 }

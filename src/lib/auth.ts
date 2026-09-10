@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/supabase/server";
 
 const DEMO_USER = {

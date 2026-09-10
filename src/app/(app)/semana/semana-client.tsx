@@ -6,6 +6,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DayOverview, MetricList, MetricRow, ScoreStrip, SectionHeader } from "@/components/v8";
 import { WEEKDAY_SHORT, CARDIO_LABELS, ACTIVITY_LABELS } from "@/domain/constants";
 import { blockStatusLabel, verdictLabel } from "@/domain/scores";
 import { formatNumber, minutesToHoursLabel, parseDate, weekRangeLabel } from "@/utils/dates";
@@ -55,39 +56,48 @@ export function SemanaClient({
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
-        {snapshot.logs.map((log) => {
+      <DayOverview
+        days={snapshot.logs.map((log) => {
           const workout = snapshot.workouts.find((item) => item.date === log.date);
           const cardioMin = snapshot.cardio
             .filter((item) => item.daily_log_id === log.id)
             .reduce((sum, item) => sum + item.minutes, 0);
-          return (
-            <button key={log.id} onClick={() => setSelected(log.date)} className="text-left">
-              <Card>
-                <CardContent className="py-4">
-                  <p className="text-xs font-semibold text-muted">{WEEKDAY_SHORT[parseDate(log.date).getDay()]}</p>
-                  <p className="mt-1 text-sm font-semibold">{log.date.slice(8)}/{log.date.slice(5, 7)}</p>
-                  <p className="mt-3 text-xs text-muted">Sono {minutesToHoursLabel(log.sleep_minutes)}</p>
-                  <p className="text-xs text-muted">Cardio {cardioMin} min</p>
-                  <p className="text-xs text-muted">Treino {workout?.label ?? "—"}</p>
-                  <p className="text-xs text-muted">Kcal {log.calories ?? "—"}</p>
-                  <p className="text-xs text-muted">P {log.protein ?? "—"}</p>
-                  <div className="mt-2">
-                    <Badge tone={log.day_type === "on" ? "primary" : "neutral"}>{log.day_type === "on" ? "ON" : "OFF"}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </button>
-          );
+          return {
+            date: log.date,
+            weekday: WEEKDAY_SHORT[parseDate(log.date).getDay()],
+            dayNum: `${log.date.slice(8)}/${log.date.slice(5, 7)}`,
+            metrics: [
+              { label: "Sono", value: minutesToHoursLabel(log.sleep_minutes) },
+              { label: "Cardio", value: `${cardioMin}m` },
+              { label: "Treino", value: workout?.label ?? "—" },
+              { label: "Kcal", value: String(log.calories ?? "—") },
+              { label: "P", value: String(log.protein ?? "—") },
+            ],
+          };
         })}
-      </div>
+        activeDate={selected ?? undefined}
+        onSelect={setSelected}
+        className="mb-[14px]"
+      />
 
-      <Card className="mt-6 overflow-x-auto">
+      <ScoreStrip
+        items={[
+          { label: "Geral", value: snapshot.scores.general.toFixed(1) },
+          { label: "Treino", value: snapshot.scores.training.toFixed(1) },
+          { label: "Nutrição", value: snapshot.scores.nutrition.toFixed(1) },
+          { label: "Cardio", value: snapshot.scores.cardio.toFixed(1) },
+          { label: "Sono", value: snapshot.scores.sleep.toFixed(1) },
+          { label: "Rotina", value: snapshot.scores.routine.toFixed(1) },
+        ]}
+      />
+
+      <SectionHeader title="Tabela da semana" />
+      <Card className="overflow-x-auto hover:translate-y-0">
         <CardHeader>
           <CardTitle>Tabela da semana</CardTitle>
         </CardHeader>
         <CardContent>
-          <table className="w-full min-w-[820px] text-left text-sm">
+          <table className="w-full min-w-[860px] text-left text-[12px]">
             <thead className="text-muted">
               <tr>
                 {["Dia", "Sono", "Cardio", "Horários", "Até 21h30", "Treino", "Progressão", "Atividade"].map((col) => (
@@ -159,23 +169,21 @@ export function SemanaClient({
         </CardContent>
       </Card>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <Card>
+      <div className="mt-6 grid gap-[14px] lg:grid-cols-[1.4fr_0.6fr]">
+        <Card className="hover:translate-y-0">
           <CardHeader>
             <CardTitle>Resumo semanal</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <Row label="Calorias totais" value={formatNumber(snapshot.summary.calories_total)} />
-            <Row label="Média diária" value={formatNumber(snapshot.summary.calories_avg)} />
-            <Row label="Proteína média" value={`${formatNumber(snapshot.summary.protein_avg)} g`} />
-            <Row label="Carbo médio" value={`${formatNumber(snapshot.summary.carbs_avg)} g`} />
-            <Row label="Gordura média" value={`${formatNumber(snapshot.summary.fat_avg)} g`} />
-            <Row label="Sono médio" value={minutesToHoursLabel(snapshot.summary.sleep_avg_minutes)} />
-            <Row label="Cardio total" value={`${snapshot.summary.cardio_total} min`} />
-            <Row label="Treinos" value={`${snapshot.summary.workouts_completed}/${snapshot.summary.workouts_planned}`} />
-            <Row label="Treinos perdidos" value={String(snapshot.summary.workouts_missed)} />
-            <Row label="Dias até 21h30" value={String(snapshot.summary.meal_cutoff_days)} />
-            <Row label="Peso semanal" value={snapshot.summary.weekly_weight ? `${formatNumber(snapshot.summary.weekly_weight, 1)} kg` : "—"} />
+          <CardContent>
+            <MetricList>
+              <MetricRow label="Calorias totais" value={formatNumber(snapshot.summary.calories_total)} />
+              <MetricRow label="Média diária" value={formatNumber(snapshot.summary.calories_avg)} />
+              <MetricRow label="Proteína média" value={`${formatNumber(snapshot.summary.protein_avg)} g`} />
+              <MetricRow label="Sono médio" value={minutesToHoursLabel(snapshot.summary.sleep_avg_minutes)} />
+              <MetricRow label="Cardio total" value={`${snapshot.summary.cardio_total} min`} />
+              <MetricRow label="Treinos" value={`${snapshot.summary.workouts_completed}/${snapshot.summary.workouts_planned}`} />
+              <MetricRow label="Peso semanal" value={snapshot.summary.weekly_weight ? `${formatNumber(snapshot.summary.weekly_weight, 1)} kg` : "—"} />
+            </MetricList>
           </CardContent>
         </Card>
         <Card>

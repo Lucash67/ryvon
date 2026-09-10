@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input, Label } from "@/components/ui/input";
+import { FormCard, FormRow, SectionHeader } from "@/components/v8";
 import { saveSettingsAction, saveTemplateExerciseAction, signOutAction } from "@/app/actions";
 import { isAuthDisabled } from "@/lib/flags";
 import type { FitnessSettings, Profile, WorkoutTemplate, WorkoutTemplateExercise } from "@/types";
@@ -42,41 +43,34 @@ export function SettingsForm({
           setMessage("Configurações salvas.");
         }}
       >
-        <Card>
-          <CardHeader>
-            <CardTitle>Perfil e metas</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <Field label="Nome" name="name" defaultValue={profile.name} />
-            <Field label="Meta de cardio (min)" name="weekly_cardio_goal" type="number" defaultValue={settings.weekly_cardio_goal} />
-            <Field label="RPE cardio" name="cardio_rpe_goal" type="number" defaultValue={settings.cardio_rpe_goal} />
-            <Field label="Meta de sono (min)" name="sleep_goal_minutes" type="number" defaultValue={settings.sleep_goal_minutes} />
-            <Field label="Horário limite" name="meal_cutoff_time" type="time" defaultValue={settings.meal_cutoff_time.slice(0, 5)} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Day On</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <Field label="Calorias" name="on_calories" type="number" defaultValue={settings.on_calories} />
-            <Field label="Proteína" name="on_protein" type="number" defaultValue={settings.on_protein} />
-            <Field label="Carboidratos" name="on_carbs" type="number" defaultValue={settings.on_carbs} />
-            <Field label="Gordura" name="on_fat" type="number" defaultValue={settings.on_fat} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Day Off</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            <Field label="Calorias" name="off_calories" type="number" defaultValue={settings.off_calories} />
-            <Field label="Proteína" name="off_protein" type="number" defaultValue={settings.off_protein} />
-            <Field label="Carboidratos" name="off_carbs" type="number" defaultValue={settings.off_carbs} />
-            <Field label="Gordura" name="off_fat" type="number" defaultValue={settings.off_fat} />
-          </CardContent>
-        </Card>
-        <Button type="submit">Salvar configurações</Button>
+        <div className="grid gap-[14px] lg:grid-cols-2">
+          <FormCard title="Metas">
+            <FormRow>
+              <Field label="Nome" name="name" defaultValue={profile.name} />
+              <Field label="Meta de cardio (min)" name="weekly_cardio_goal" type="number" defaultValue={settings.weekly_cardio_goal} />
+              <Field label="RPE cardio" name="cardio_rpe_goal" type="number" defaultValue={settings.cardio_rpe_goal} />
+              <Field label="Meta de sono (min)" name="sleep_goal_minutes" type="number" defaultValue={settings.sleep_goal_minutes} />
+              <Field label="Horário limite" name="meal_cutoff_time" type="time" defaultValue={settings.meal_cutoff_time.slice(0, 5)} />
+            </FormRow>
+          </FormCard>
+          <FormCard title="Macros">
+            <p className="mb-2 text-[11px] text-muted uppercase">Day On</p>
+            <FormRow>
+              <Field label="Calorias" name="on_calories" type="number" defaultValue={settings.on_calories} />
+              <Field label="Proteína" name="on_protein" type="number" defaultValue={settings.on_protein} />
+              <Field label="Carboidratos" name="on_carbs" type="number" defaultValue={settings.on_carbs} />
+              <Field label="Gordura" name="on_fat" type="number" defaultValue={settings.on_fat} />
+            </FormRow>
+            <p className="mb-2 mt-3 text-[11px] text-muted uppercase">Day Off</p>
+            <FormRow>
+              <Field label="Calorias" name="off_calories" type="number" defaultValue={settings.off_calories} />
+              <Field label="Proteína" name="off_protein" type="number" defaultValue={settings.off_protein} />
+              <Field label="Carboidratos" name="off_carbs" type="number" defaultValue={settings.off_carbs} />
+              <Field label="Gordura" name="off_fat" type="number" defaultValue={settings.off_fat} />
+            </FormRow>
+          </FormCard>
+        </div>
+        <Button type="submit" className="mt-[14px]">Salvar configurações</Button>
         {message ? <p className="text-sm text-success">{message}</p> : null}
       </form>
       {isAuthDisabled() ? null : (
@@ -87,8 +81,9 @@ export function SettingsForm({
         </form>
       )}
 
+      <SectionHeader title="Prescrição dos treinos" />
       {catalog.map(({ template, exercises }) => (
-        <Card key={template.id}>
+        <Card key={template.id} className="hover:translate-y-0">
           <CardHeader>
             <CardTitle>{template.name}</CardTitle>
           </CardHeader>

@@ -7,7 +7,7 @@
 } from "@/domain/constants";
 import { SEED_EXERCISES, SEED_TEMPLATES, WEEK1_LOGS } from "@/domain/program";
 import { buildWeekBounds, plannedTemplateForDate, dayTypeForTemplate } from "@/domain/week";
-import { datesInRange, timeToMinutes, todayDateString } from "@/utils/dates";
+import { datesInRange } from "@/utils/dates";
 import { calculateSleepMinutes } from "@/domain/sleep";
 import type {
   CardioSession,

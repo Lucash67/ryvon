@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionHeader } from "@/components/v8";
 import { requireSession } from "@/lib/auth";
 import { loadTrainingModule } from "@/services/loaders";
 import { redirect } from "next/navigation";
@@ -33,48 +34,60 @@ export default async function TreinosPage() {
               <Button type="submit">Iniciar {planned.name}</Button>
             </form>
           ) : (
-            <Badge>Descanso</Badge>
+            <Badge tone="neutral">Descanso</Badge>
           )
         }
       />
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Calendário da semana</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {data.templates.map((template) => (
-            <div key={template.id} className="surface-muted rounded-xl px-4 py-3">
-              <p className="text-sm font-semibold">{template.name}</p>
-              <p className="text-xs text-muted">{template.is_rest ? "Off" : "Day On"}</p>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <SectionHeader title="Calendário da semana" />
+      <div className="grid grid-cols-2 gap-[9px] sm:grid-cols-4 lg:grid-cols-7">
+        {data.templates.map((template) => (
+          <div
+            key={template.id}
+            className="rounded-[14px] border border-border bg-surface-2 p-3 text-center"
+          >
+            <p className="text-[10px] font-bold tracking-wide text-muted uppercase">{template.name}</p>
+            <p className="mt-1 text-[11px] text-muted">{template.is_rest ? "Off" : "Day On"}</p>
+          </div>
+        ))}
+      </div>
 
+      <SectionHeader title="Templates e exercícios" />
       <div className="space-y-4">
         {data.catalog.map(({ template, exercises }) => (
-          <Card key={template.id}>
+          <Card key={template.id} className="hover:translate-y-0">
             <CardHeader>
-              <CardTitle>{template.name}</CardTitle>
+              <CardTitle className="text-[17px]">{template.name}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {template.is_rest ? (
-                <p className="text-sm text-muted">Dia de descanso.</p>
+                <p className="text-[11px] text-muted">Dia de descanso.</p>
               ) : (
                 exercises.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-3">
-                    <div>
-                      <p className="font-medium">{item.exercise?.name}</p>
-                      <p className="text-xs text-muted">
-                        {item.work_sets}x {item.rep_min}–{item.rep_max} · descanso {Math.round(item.rest_seconds / 60)} min
-                      </p>
+                  <div
+                    key={item.id}
+                    className="rounded-[14px] border border-border bg-surface-2 p-[14px]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-foreground">{item.exercise?.name}</p>
+                        <p className="mt-1 text-[11px] text-muted">
+                          {item.exercise?.muscle_group} · {item.work_sets}x {item.rep_min}–{item.rep_max} · descanso {Math.round(item.rest_seconds / 60)} min
+                        </p>
+                      </div>
+                      {item.exercise_id ? (
+                        <Link href={`/treinos/exercicio/${item.exercise_id}`} className="shrink-0 text-[11px] font-semibold text-primary">
+                          Histórico
+                        </Link>
+                      ) : null}
                     </div>
-                    {item.exercise_id ? (
-                      <Link href={`/treinos/exercicio/${item.exercise_id}`} className="text-sm text-primary">
-                        Histórico
-                      </Link>
-                    ) : null}
+                    <div className="mt-2.5 grid grid-cols-2 gap-[7px] sm:grid-cols-5">
+                      {Array.from({ length: item.work_sets }).map((_, i) => (
+                        <div key={i} className="rounded-lg bg-surface-3 px-2 py-[9px] text-center text-[10px] text-muted">
+                          S{i + 1}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))
               )}

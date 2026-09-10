@@ -19,7 +19,7 @@ import {
 } from "@/services/workout.service";
 import { plannedTemplateForDate } from "@/domain/week";
 import { datesInRange, todayDateString } from "@/utils/dates";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/runtime";
 import {
   demoLoadAppContext,
   demoLoadDashboard,
@@ -30,7 +30,7 @@ import {
 } from "@/services/demo-state";
 
 export async function loadAppContext(supabase: SupabaseClient, userId: string, date = todayDateString()) {
-  if (!isSupabaseConfigured()) return demoLoadAppContext(date);
+  if (!isDemoMode()) return demoLoadAppContext(date);
   const { profile, settings } = await getProfileAndSettings(supabase, userId);
   const week = await getOrCreateWeek(supabase, userId, date, settings.program_start_date);
   const log = await getOrCreateDailyLog(supabase, userId, date, settings);
@@ -39,7 +39,7 @@ export async function loadAppContext(supabase: SupabaseClient, userId: string, d
 }
 
 export async function loadToday(supabase: SupabaseClient, userId: string, date: string) {
-  if (!isSupabaseConfigured()) return demoLoadToday(date);
+  if (!isDemoMode()) return demoLoadToday(date);
   const context = await loadAppContext(supabase, userId, date);
   const [meals, cardio, session, weight] = await Promise.all([
     listMealTimes(supabase, context.log.id),
@@ -52,7 +52,7 @@ export async function loadToday(supabase: SupabaseClient, userId: string, date: 
 }
 
 export async function loadWeekView(supabase: SupabaseClient, userId: string, weekNumber?: number) {
-  if (!isSupabaseConfigured()) return demoLoadWeekView(weekNumber);
+  if (!isDemoMode()) return demoLoadWeekView(weekNumber);
   const { profile, settings } = await getProfileAndSettings(supabase, userId);
   const today = todayDateString();
   const currentWeek = await getOrCreateWeek(supabase, userId, today, settings.program_start_date);
@@ -93,14 +93,14 @@ export async function loadWeekView(supabase: SupabaseClient, userId: string, wee
 }
 
 export async function loadDashboard(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) return demoLoadDashboard();
+  if (!isDemoMode()) return demoLoadDashboard();
   const weekView = await loadWeekView(supabase, userId);
   const weights = await listWeightLogs(supabase, userId, { limit: 90 });
   return { ...weekView, weights, latestWeight: weights[0] ?? null };
 }
 
 export async function loadTrainingModule(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) return demoLoadTraining();
+  if (!isDemoMode()) return demoLoadTraining();
   const context = await loadAppContext(supabase, userId);
   const sessions = await listWorkoutSessionsInRange(
     supabase,
@@ -120,13 +120,13 @@ export async function loadTrainingModule(supabase: SupabaseClient, userId: strin
 }
 
 export async function loadNotesAndPhotos(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) return demoLoadNotesAndPhotos();
+  if (!isDemoMode()) return demoLoadNotesAndPhotos();
   const [notes, photos] = await Promise.all([listHealthNotes(supabase, userId), listPhotos(supabase, userId)]);
   return { notes, photos: await signedPhotoUrls(supabase, photos) };
 }
 
 export async function loadNutritionPage(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return { ...demoLoadWeekView(), today: demoLoadToday(todayDateString()) };
   }
   const weekView = await loadWeekView(supabase, userId);

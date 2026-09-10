@@ -1,11 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_MEAL_PLAN } from "@/domain/constants";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/runtime";
 import { mockStore } from "@/lib/mock-store";
 import type { FitnessSettings, MealPlan, Profile } from "@/types";
 
 export async function getProfile(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.getProfile();
   }
   try {
@@ -18,7 +18,7 @@ export async function getProfile(supabase: SupabaseClient, userId: string) {
 }
 
 export async function getSettings(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.getSettings();
   }
   try {
@@ -39,7 +39,7 @@ export async function getSettings(supabase: SupabaseClient, userId: string) {
 }
 
 export async function updateProfileName(supabase: SupabaseClient, userId: string, name: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     mockStore.updateProfileName(name);
     return;
   }
@@ -52,7 +52,7 @@ export async function updateSettings(
   userId: string,
   patch: Partial<FitnessSettings>,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     mockStore.updateSettings(patch);
     return;
   }
@@ -65,7 +65,7 @@ export async function updateMealPlan(
   userId: string,
   mealPlan: MealPlan,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     mockStore.updateMealPlan(mealPlan);
     return;
   }

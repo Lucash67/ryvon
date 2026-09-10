@@ -1,21 +1,22 @@
+import { redirect } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
+import { isAuthDisabled } from "@/lib/runtime";
 import { getSessionUser } from "@/lib/supabase/server";
+import { DEMO_USER } from "@/lib/supabase/demo-user";
 
-const DEMO_USER = {
-  id: "00000000-0000-0000-0000-000000000000",
-  email: "lucas@fitness-os.local",
-  app_metadata: {},
-  user_metadata: { name: "Lucas" },
-  aud: "authenticated",
-  created_at: new Date().toISOString(),
-};
-
-export async function requireSession() {
-  try {
-    const { supabase, user } = await getSessionUser();
-    return { supabase, user: (user ?? DEMO_USER) as any };
-  } catch {
-    const { createServerSupabase } = await import("@/lib/supabase/server");
-    const supabase = await createServerSupabase();
-    return { supabase, user: DEMO_USER as any };
+export async function requireSession(): Promise<{
+  supabase: Awaited<ReturnType<typeof import("@/lib/supabase/server").createServerSupabase>>;
+  user: User;
+}> {
+  if (isAuthDisabled()) {
+    const { supabase } = await getSessionUser();
+    return { supabase, user: DEMO_USER };
   }
+
+  const { supabase, user } = await getSessionUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  return { supabase, user };
 }

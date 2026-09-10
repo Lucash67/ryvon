@@ -19,7 +19,7 @@ import { average, mostCommon, sum } from "@/utils/format";
 import { datesInRange } from "@/utils/dates";
 import { listCardioByWeek, listDailyLogsByWeek } from "@/services/daily-log.service";
 import { latestWeight, listWeightLogs } from "@/services/entries.service";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/runtime";
 import { mockStore } from "@/lib/mock-store";
 import { listWorkoutSessionsInRange } from "@/services/workout.service";
 import type {
@@ -230,7 +230,7 @@ export async function upsertWeeklyReport(
     verdict: snapshot.verdict,
     summary: snapshot.summary,
   };
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.upsertWeeklyReport(payload as any);
   }
   try {
@@ -247,7 +247,7 @@ export async function upsertWeeklyReport(
 }
 
 export async function getWeeklyReport(supabase: SupabaseClient, weekId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return null;
   }
   try {

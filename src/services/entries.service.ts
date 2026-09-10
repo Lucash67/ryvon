@@ -1,5 +1,5 @@
 ﻿import type { SupabaseClient } from "@supabase/supabase-js";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/runtime";
 import { mockStore } from "@/lib/mock-store";
 import type { HealthNote, ProgressPhoto, WeightLog } from "@/types";
 
@@ -8,7 +8,7 @@ export async function listWeightLogs(
   userId: string,
   options?: { start?: string; end?: string; limit?: number },
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listWeightLogs(options);
   }
   try {
@@ -33,7 +33,7 @@ export async function upsertWeightLog(
   userId: string,
   payload: Pick<WeightLog, "date" | "weight" | "fasted" | "notes">,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.upsertWeightLog(payload);
   }
   try {
@@ -50,7 +50,7 @@ export async function upsertWeightLog(
 }
 
 export async function latestWeight(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.latestWeight();
   }
   try {
@@ -62,7 +62,7 @@ export async function latestWeight(supabase: SupabaseClient, userId: string) {
 }
 
 export async function listHealthNotes(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listHealthNotes();
   }
   try {
@@ -83,7 +83,7 @@ export async function addHealthNote(
   userId: string,
   payload: Pick<HealthNote, "date" | "type" | "status" | "note">,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.addHealthNote(payload as any);
   }
   try {
@@ -104,7 +104,7 @@ export async function updateHealthNote(
   id: string,
   patch: Partial<Pick<HealthNote, "status" | "note" | "type">>,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     mockStore.updateHealthNote(id, patch as any);
     return;
   }
@@ -113,7 +113,7 @@ export async function updateHealthNote(
 }
 
 export async function listPhotos(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listPhotos();
   }
   try {
@@ -134,7 +134,7 @@ export async function addPhoto(
   userId: string,
   payload: Pick<ProgressPhoto, "date" | "weight" | "category" | "storage_path">,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.addPhoto(payload as any);
   }
   try {
@@ -151,7 +151,7 @@ export async function addPhoto(
 }
 
 export async function signedPhotoUrls(supabase: SupabaseClient, photos: ProgressPhoto[]) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return photos;
   }
   try {

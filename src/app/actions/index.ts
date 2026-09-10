@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cardioSchema, healthNoteSchema, nutritionSchema, settingsSchema, weightSchema } from "@/lib/validations/daily";
-import { isSupabaseConfigured, requireUser } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/runtime";
 import { getSettings, updateProfileName, updateSettings } from "@/services/settings.service";
 import {
   addCardioSession,
@@ -47,10 +48,6 @@ import {
   demoUpsertWeight,
 } from "@/services/demo-state";
 import type { CardioSession, DailyLogPatch, HealthNote, WorkoutSessionStatus } from "@/types";
-
-function isDemoMode() {
-  return !isSupabaseConfigured();
-}
 
 function refresh() {
   revalidatePath("/", "layout");
@@ -295,7 +292,7 @@ export async function uploadPhotoAction(formData: FormData) {
 }
 
 export async function signOutAction() {
-  if (isAuthDisabled() || isDemoMode()) {
+  if (isAuthDisabled()) {
     redirect("/dashboard");
   }
   const { supabase } = await requireUser();

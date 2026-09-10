@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChartCard, WeightChart } from "@/components/charts/simple-charts";
 import { DomainEmptyState, MetricCard, MetricList, MetricRow, SectionHeader } from "@/components/v8";
 import { requireSession } from "@/lib/auth";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/runtime";
 import { latestWeight, listHealthNotes, listWeightLogs } from "@/services/entries.service";
 import { demoLoadDashboard, demoLoadNotesAndPhotos } from "@/services/demo-state";
 import { formatNumber } from "@/utils/dates";
@@ -11,7 +11,7 @@ import { HEALTH_NOTE_LABELS } from "@/domain/constants";
 
 export default async function ProgressoPage() {
   const { supabase, user } = await requireSession();
-  const [weights, latest, notes] = isSupabaseConfigured()
+  const [weights, latest, notes] = isDemoMode()
     ? await Promise.all([
         listWeightLogs(supabase, user.id, { limit: 90 }),
         latestWeight(supabase, user.id),

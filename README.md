@@ -29,9 +29,17 @@ Pronto para deploy na Vercel.
 cp .env.example .env.local
 ```
 
-Preencha:
+Modos de execução:
+
+| Modo | Variáveis |
+|------|-----------|
+| **Demo local** | `NEXT_PUBLIC_AUTH_DISABLED=true` (sem Supabase obrigatório) |
+| **Auth real** | omitir `NEXT_PUBLIC_AUTH_DISABLED` + Supabase configurado |
+
+Em **produção**, nunca use `NEXT_PUBLIC_AUTH_DISABLED=true`. Sem Supabase configurado, o app exibe erro explícito de configuração.
 
 ```
+NEXT_PUBLIC_AUTH_DISABLED=true
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=

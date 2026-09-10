@@ -1,6 +1,6 @@
 ﻿import type { SupabaseClient } from "@supabase/supabase-js";
 import { detectProgression } from "@/domain/progression";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/runtime";
 import { mockStore } from "@/lib/mock-store";
 import type {
   Exercise,
@@ -13,7 +13,7 @@ import type {
 } from "@/types";
 
 export async function listExercises(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listExercises();
   }
   try {
@@ -30,7 +30,7 @@ export async function listExercises(supabase: SupabaseClient, userId: string) {
 }
 
 export async function listTemplateExercises(supabase: SupabaseClient, templateId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listTemplateExercises(templateId);
   }
   try {
@@ -47,7 +47,7 @@ export async function listTemplateExercises(supabase: SupabaseClient, templateId
 }
 
 export async function getWorkoutSessionForDate(supabase: SupabaseClient, userId: string, date: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.getWorkoutSessionForDate(date);
   }
   try {
@@ -72,7 +72,7 @@ export async function listWorkoutSessionsInRange(
   start: string,
   end: string,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listWorkoutSessionsInRange(start, end);
   }
   try {
@@ -96,7 +96,7 @@ async function previousExerciseSets(
   exerciseId: string,
   beforeDate: string,
 ) {
-  if (!isSupabaseConfigured()) return [];
+  if (!isDemoMode()) return [];
   try {
     const { data, error } = await supabase
       .from("exercise_sessions")
@@ -124,7 +124,7 @@ export async function startWorkout(
   template: WorkoutTemplate,
   dailyLogId: string,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.getWorkoutSessionForDate(date) ?? ({} as any);
   }
   try {
@@ -212,7 +212,7 @@ export async function markWorkoutStatus(
   sessionId: string,
   status: WorkoutSessionStatus,
 ) {
-  if (!isSupabaseConfigured()) return;
+  if (!isDemoMode()) return;
   const { error } = await supabase
     .from("workout_sessions")
     .update({
@@ -224,7 +224,7 @@ export async function markWorkoutStatus(
 }
 
 export async function getWorkoutSessionDetail(supabase: SupabaseClient, sessionId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.getWorkoutSessionDetail(sessionId);
   }
   try {
@@ -259,13 +259,13 @@ export async function updateExerciseSet(
   setId: string,
   patch: Partial<Pick<ExerciseSet, "weight" | "reps" | "rir">>,
 ) {
-  if (!isSupabaseConfigured()) return;
+  if (!isDemoMode()) return;
   const { error } = await supabase.from("exercise_sets").update(patch).eq("id", setId);
   if (error) throw error;
 }
 
 export async function completeExerciseSession(supabase: SupabaseClient, exerciseSessionId: string) {
-  if (!isSupabaseConfigured()) return;
+  if (!isDemoMode()) return;
   const { error } = await supabase
     .from("exercise_sessions")
     .update({ status: "completed" })
@@ -274,7 +274,7 @@ export async function completeExerciseSession(supabase: SupabaseClient, exercise
 }
 
 export async function finishWorkout(supabase: SupabaseClient, sessionId: string, durationSeconds: number) {
-  if (!isSupabaseConfigured()) return;
+  if (!isDemoMode()) return;
   const { error } = await supabase
     .from("workout_sessions")
     .update({
@@ -292,7 +292,7 @@ export async function getExerciseHistory(
   exerciseId: string,
   limit = 20,
 ) {
-  if (!isSupabaseConfigured()) return [];
+  if (!isDemoMode()) return [];
   try {
     const { data, error } = await supabase
       .from("exercise_sessions")
@@ -338,7 +338,7 @@ export async function updateTemplateExercise(
   id: string,
   patch: Partial<Pick<WorkoutTemplateExercise, "work_sets" | "rep_min" | "rep_max" | "rest_seconds" | "instructions">>,
 ) {
-  if (!isSupabaseConfigured()) return;
+  if (!isDemoMode()) return;
   const { error } = await supabase.from("workout_template_exercises").update(patch).eq("id", id);
   if (error) throw error;
 }
@@ -348,7 +348,7 @@ export async function reorderTemplates(
   userId: string,
   orderedIds: string[],
 ) {
-  if (!isSupabaseConfigured()) return;
+  if (!isDemoMode()) return;
   await Promise.all(
     orderedIds.map((id, order_index) =>
       supabase.from("workout_templates").update({ order_index }).eq("id", id).eq("user_id", userId),
@@ -363,7 +363,7 @@ export async function getPreviousBestMap(
   beforeDate: string,
 ) {
   const map = new Map<string, ExerciseSet[]>();
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return map;
   }
   try {

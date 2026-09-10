@@ -1,3 +1,8 @@
-export function isAuthDisabled() {
-  return process.env.NEXT_PUBLIC_AUTH_DISABLED !== "false";
-}
+export {
+  isAuthDisabled,
+  isAuthEnabled,
+  isDemoMode,
+  isProductionRuntime,
+  isSupabaseConfigured,
+  getConfigurationIssue,
+} from "@/lib/runtime";

@@ -1,28 +1,33 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
+import { isAuthDisabled, isDemoMode, getSupabasePublicConfig } from "@/lib/runtime";
+import { DEMO_USER } from "@/lib/supabase/demo-user";
 
-export function isSupabaseConfigured() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return Boolean(url && key && !url.includes("placeholder"));
-}
-
-export const DEMO_USER = {
-  id: "00000000-0000-0000-0000-000000000000",
-  email: "lucas@fitness-os.local",
-  app_metadata: {},
-  user_metadata: { name: "Lucas" },
-  aud: "authenticated",
-  created_at: new Date().toISOString(),
-};
+export { isSupabaseConfigured } from "@/lib/runtime";
 
 export async function createServerSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://placeholder.supabase.co";
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "public-anon-placeholder-key";
+  const config = getSupabasePublicConfig();
 
   const cookieStore = await cookies();
 
-  return createServerClient(url, key, {
+  if (!config) {
+    if (isDemoMode() || isAuthDisabled()) {
+      return createServerClient("https://placeholder.supabase.co", "public-anon-placeholder-key", {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll() {},
+        },
+      });
+    }
+    redirect("/auth/configuration-error?reason=missing_supabase");
+  }
+
+
+  return createServerClient(config.url, config.key, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -40,22 +45,35 @@ export async function createServerSupabase() {
   });
 }
 
-export async function getSessionUser() {
+export async function getSessionUser(): Promise<{ supabase: Awaited<ReturnType<typeof createServerSupabase>>; user: User | null }> {
+  if (isAuthDisabled()) {
+    const supabase = await createServerSupabase();
+    return { supabase, user: DEMO_USER };
+  }
+
   const supabase = await createServerSupabase();
-  if (!isSupabaseConfigured()) {
-    return { supabase, user: DEMO_USER as any };
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error) {
+    return { supabase, user: null };
   }
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    return { supabase, user: (user ?? DEMO_USER) as any };
-  } catch {
-    return { supabase, user: DEMO_USER as any };
-  }
+
+  return { supabase, user };
 }
 
-export async function requireUser() {
+export async function requireUser(): Promise<{ supabase: Awaited<ReturnType<typeof createServerSupabase>>; user: User }> {
+  if (isAuthDisabled()) {
+    const supabase = await createServerSupabase();
+    return { supabase, user: DEMO_USER };
+  }
+
   const { supabase, user } = await getSessionUser();
-  return { supabase, user: (user ?? DEMO_USER) as any };
+  if (!user) {
+    redirect("/login");
+  }
+
+  return { supabase, user };
 }

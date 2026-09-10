@@ -3,7 +3,7 @@ import { DEFAULT_MEAL_TIMES } from "@/domain/constants";
 import { calculateSleepMinutes } from "@/domain/sleep";
 import { buildWeekBounds, dayTypeForTemplate, plannedTemplateForDate } from "@/domain/week";
 import { timeToMinutes } from "@/utils/dates";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/runtime";
 import { mockStore } from "@/lib/mock-store";
 import type {
   CardioSession,
@@ -21,7 +21,7 @@ export async function getOrCreateWeek(
   date: string,
   programStart: string,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.getOrCreateWeek(date, programStart);
   }
   try {
@@ -63,7 +63,7 @@ export async function getOrCreateWeek(
 }
 
 export async function getWeekByNumber(supabase: SupabaseClient, userId: string, weekNumber: number) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.getWeekByNumber(weekNumber);
   }
   try {
@@ -81,7 +81,7 @@ export async function getWeekByNumber(supabase: SupabaseClient, userId: string, 
 }
 
 export async function listTemplates(supabase: SupabaseClient, userId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listTemplates();
   }
   try {
@@ -103,7 +103,7 @@ export async function getOrCreateDailyLog(
   date: string,
   settings: FitnessSettings,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.getOrCreateDailyLog(date);
   }
   try {
@@ -158,7 +158,7 @@ export async function getOrCreateDailyLog(
 }
 
 export async function getDailyLog(supabase: SupabaseClient, userId: string, date: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.getOrCreateDailyLog(date);
   }
   try {
@@ -176,7 +176,7 @@ export async function getDailyLog(supabase: SupabaseClient, userId: string, date
 }
 
 export async function listDailyLogsByWeek(supabase: SupabaseClient, weekId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listDailyLogsByWeek(weekId);
   }
   try {
@@ -193,7 +193,7 @@ export async function listDailyLogsByWeek(supabase: SupabaseClient, weekId: stri
 }
 
 export async function listMealTimes(supabase: SupabaseClient, dailyLogId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listMealTimes(dailyLogId);
   }
   try {
@@ -214,7 +214,7 @@ export async function replaceMealTimes(
   dailyLogId: string,
   times: string[],
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.replaceMealTimes(dailyLogId, times);
   }
   try {
@@ -246,7 +246,7 @@ export async function updateDailyLog(
   settings: FitnessSettings,
   patch: DailyLogPatch,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.updateDailyLog(date, patch);
   }
   try {
@@ -274,7 +274,7 @@ export async function updateDailyLog(
 }
 
 export async function listCardioByLog(supabase: SupabaseClient, dailyLogId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listCardioByLog(dailyLogId);
   }
   try {
@@ -291,7 +291,7 @@ export async function listCardioByLog(supabase: SupabaseClient, dailyLogId: stri
 }
 
 export async function listCardioByWeek(supabase: SupabaseClient, userId: string, dates: string[]) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.listCardioByWeek(dates);
   }
   try {
@@ -323,7 +323,7 @@ export async function addCardioSession(
   dailyLogId: string,
   payload: Pick<CardioSession, "type" | "minutes" | "rpe" | "timing" | "notes">,
 ) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     return mockStore.addCardioSession(dailyLogId, payload);
   }
   try {
@@ -344,7 +344,7 @@ export async function addCardioSession(
 }
 
 export async function deleteCardioSession(supabase: SupabaseClient, id: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isDemoMode()) {
     mockStore.deleteCardioSession(id);
     return;
   }
